@@ -26,6 +26,7 @@ type TotalsRow = {
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
+    all: "Alle",
     sleeping: "Slapen",
     feeding: "Voeding",
     care: "Verzorging",
@@ -37,6 +38,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Overig",
   },
   ca: {
+    all: "Tots",
     sleeping: "Dormir",
     feeding: "Alimentació",
     care: "Cura",
@@ -48,6 +50,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Altres",
   },
   en: {
+    all: "All",
     sleeping: "Sleeping",
     feeding: "Feeding",
     care: "Care",
@@ -59,6 +62,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Other",
   },
   es: {
+    all: "Todos",
     sleeping: "Dormir",
     feeding: "Alimentación",
     care: "Cuidado",
@@ -203,6 +207,7 @@ export default function RegistryPage() {
   const [totals, setTotals] = useState<Record<string, TotalsRow>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -262,10 +267,10 @@ export default function RegistryPage() {
 
   const cards = useMemo(() => {
     return items.map((it) => {
-      const t = totals[it.id];
+      const totalsRow = totals[it.id];
 
-      const paid = t?.paid_cents ?? 0;
-      const reported = t?.reported_cents ?? 0;
+      const paid = totalsRow?.paid_cents ?? 0;
+      const reported = totalsRow?.reported_cents ?? 0;
       const target = it.target_cents ?? 0;
       const total = paid + reported;
 
@@ -275,6 +280,7 @@ export default function RegistryPage() {
       const pct = Math.round(totalProgress * 100);
       const reached = target > 0 && total >= target;
       const disabled = it.already_owned || reached;
+      const categoryKey = normalizeCategory(it.category);
 
       return {
         it,
@@ -287,32 +293,37 @@ export default function RegistryPage() {
         pct,
         reached,
         disabled,
+        categoryKey,
       };
     });
   }, [items, totals]);
 
-  const groupedCards = useMemo(() => {
-    const groups: Record<string, typeof cards> = {};
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
 
     for (const card of cards) {
-      const key = normalizeCategory(card.it.category);
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(card);
+      set.add(card.categoryKey);
     }
 
-    return Object.entries(groups).sort(([a], [b]) => {
-      const ia = categoryOrder.indexOf(a);
-      const ib = categoryOrder.indexOf(b);
-
-      const va = ia === -1 ? Number.MAX_SAFE_INTEGER : ia;
-      const vb = ib === -1 ? Number.MAX_SAFE_INTEGER : ib;
-
-      if (va !== vb) return va - vb;
-      return a.localeCompare(b);
-    });
+    return categoryOrder.filter((key) => set.has(key));
   }, [cards]);
+
+  const visibleCards = useMemo(() => {
+    if (selectedCategory === "all") {
+      return cards;
+    }
+
+    return cards.filter((card) => card.categoryKey === selectedCategory);
+  }, [cards, selectedCategory]);
+
+  useEffect(() => {
+    if (selectedCategory === "all") return;
+
+    const stillExists = availableCategories.includes(selectedCategory);
+    if (!stillExists) {
+      setSelectedCategory("all");
+    }
+  }, [availableCategories, selectedCategory]);
 
   if (loading) {
     return <main className="p-6">{t.loading}</main>;
@@ -334,134 +345,157 @@ export default function RegistryPage() {
             {t.empty}
           </div>
         ) : (
-          <div className="mt-6 space-y-10">
-            {groupedCards.map(([category, group]) => (
-              <section key={category}>
-                <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                  {categoryLabels[lang][category] ?? category}
-                </h2>
+          <>
+            <div className="mt-4">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className={[
+                    "whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition",
+                    selectedCategory === "all"
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+                  ].join(" ")}
+                >
+                  {categoryLabels[lang].all}
+                </button>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.map(
-                    ({
-                      it,
-                      paid,
-                      reported,
-                      total,
-                      target,
-                      totalProgress,
-                      paidProgress,
-                      pct,
-                      reached,
-                      disabled,
-                    }) => (
-                      <button
-                        key={it.id}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => {
-                          if (!disabled) {
-                            router.push(`/${lang}/item/${it.slug}`);
-                          }
-                        }}
-                        className={[
-                          "text-left rounded-2xl border bg-white p-4 shadow-sm transition",
-                          disabled
-                            ? "cursor-not-allowed opacity-60"
-                            : "hover:-translate-y-0.5 hover:shadow-md",
-                        ].join(" ")}
-                      >
-                        {it.image_url ? (
-                          <img
-                            src={it.image_url}
-                            alt={it.title}
-                            className="h-40 w-full rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="h-40 w-full rounded-xl bg-gray-100" />
-                        )}
+                {availableCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
+                    className={[
+                      "whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition",
+                      selectedCategory === category
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+                    ].join(" ")}
+                  >
+                    {categoryLabels[lang][category] ?? category}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                        <div className="mt-4 flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="font-semibold">{it.title}</div>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleCards.map(
+                ({
+                  it,
+                  paid,
+                  reported,
+                  total,
+                  target,
+                  totalProgress,
+                  paidProgress,
+                  pct,
+                  reached,
+                  disabled,
+                }) => (
+                  <button
+                    key={it.id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      if (!disabled) {
+                        router.push(`/${lang}/item/${it.slug}`);
+                      }
+                    }}
+                    className={[
+                      "text-left rounded-2xl border bg-white p-4 shadow-sm transition",
+                      disabled
+                        ? "cursor-not-allowed opacity-60"
+                        : "hover:-translate-y-0.5 hover:shadow-md",
+                    ].join(" ")}
+                  >
+                    {it.image_url ? (
+                      <img
+                        src={it.image_url}
+                        alt={it.title}
+                        className="h-40 w-full rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="h-40 w-full rounded-xl bg-gray-100" />
+                    )}
 
-                            {it.description ? (
-                              <div className="mt-1 line-clamp-2 text-sm text-gray-600">
-                                {it.description}
-                              </div>
-                            ) : null}
+                    <div className="mt-4 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold">{it.title}</div>
+
+                        {it.description ? (
+                          <div className="mt-1 line-clamp-2 text-sm text-gray-600">
+                            {it.description}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      {it.already_owned ? (
+                        <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                          {t.alreadyBought}
+                        </span>
+                      ) : reached ? (
+                        <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                          {t.full}
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                          {t.available}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="flex items-start justify-between gap-4 text-sm">
+                        <div className="text-gray-600">
+                          <div>
+                            {t.total}:{" "}
+                            <span className="font-medium text-gray-900">
+                              {euro(total, lang)}
+                            </span>
                           </div>
 
-                          {it.already_owned ? (
-                            <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                              {t.alreadyBought}
-                            </span>
-                          ) : reached ? (
-                            <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
-                              {t.full}
-                            </span>
-                          ) : (
-                            <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                              {t.available}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-4">
-                          <div className="flex items-start justify-between gap-4 text-sm">
-                            <div className="text-gray-600">
-                              <div>
-                                {t.total}:{" "}
-                                <span className="font-medium text-gray-900">
-                                  {euro(total, lang)}
-                                </span>
-                              </div>
-
-                              <div className="mt-1 text-xs text-gray-500">
-                                {euro(paid, lang)} {t.confirmed}
-                                {reported > 0
-                                  ? ` · ${euro(reported, lang)} ${t.reported}`
-                                  : ""}
-                              </div>
-                            </div>
-
-                            <div className="text-right text-gray-600">
-                              <div>
-                                {t.target}:{" "}
-                                <span className="font-medium text-gray-900">
-                                  {target > 0 ? euro(target, lang) : "—"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className="h-2 bg-gray-300"
-                              style={{ width: `${Math.round(totalProgress * 100)}%` }}
-                            />
-                            <div
-                              className="-mt-2 h-2 bg-gray-900"
-                              style={{ width: `${Math.round(paidProgress * 100)}%` }}
-                            />
-                          </div>
-
-                          <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-                            <span>
-                              {target > 0
-                                ? `${pct}% ${t.ofGoal}`
-                                : t.noTarget}
-                            </span>
-                            <span>{t.darkConfirmed}</span>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {euro(paid, lang)} {t.confirmed}
+                            {reported > 0
+                              ? ` · ${euro(reported, lang)} ${t.reported}`
+                              : ""}
                           </div>
                         </div>
-                      </button>
-                    )
-                  )}
-                </div>
-              </section>
-            ))}
-          </div>
+
+                        <div className="text-right text-gray-600">
+                          <div>
+                            {t.target}:{" "}
+                            <span className="font-medium text-gray-900">
+                              {target > 0 ? euro(target, lang) : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className="h-2 bg-gray-300"
+                          style={{ width: `${Math.round(totalProgress * 100)}%` }}
+                        />
+                        <div
+                          className="-mt-2 h-2 bg-gray-900"
+                          style={{ width: `${Math.round(paidProgress * 100)}%` }}
+                        />
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                        <span>
+                          {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
+                        </span>
+                        <span>{t.darkConfirmed}</span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              )}
+            </div>
+          </>
         )}
       </div>
     </main>
