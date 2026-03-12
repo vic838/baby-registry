@@ -346,13 +346,15 @@ export default function RegistryPage() {
           </div>
         ) : (
           <>
-            <div className="mt-4">
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="relative mt-4">
+              <div
+                className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("all")}
                   className={[
-                    "whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition",
+                    "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
                     selectedCategory === "all"
                       ? "border-gray-900 bg-gray-900 text-white"
                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
@@ -367,7 +369,7 @@ export default function RegistryPage() {
                     type="button"
                     onClick={() => setSelectedCategory(category)}
                     className={[
-                      "whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition",
+                      "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
                       selectedCategory === category
                         ? "border-gray-900 bg-gray-900 text-white"
                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
@@ -377,6 +379,8 @@ export default function RegistryPage() {
                   </button>
                 ))}
               </div>
+
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white to-transparent" />
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
