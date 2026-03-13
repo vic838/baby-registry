@@ -198,30 +198,47 @@ function normalizeCategory(category: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
+
     feeding: "feeding",
     food: "feeding",
+
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
+    oral_care_teething: "care",
     verzorging: "care",
+
     travel: "travel",
     onderweg: "travel",
+    outdoor_travel: "travel",
+
     toys: "toys",
     speelgoed: "toys",
+    play_development: "toys",
+
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
+    textiles: "clothes",
+
     room: "room",
     nursery: "room",
     babykamer: "room",
+
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
+
     other: "other",
     overig: "other",
   };
 
   return aliases[value] ?? (value || "other");
+}
+
+function getCategoryLabel(lang: Lang, category: string | null | undefined) {
+  const normalized = normalizeCategory(category);
+  return categoryLabels[lang][normalized] ?? categoryLabels[lang].other;
 }
 
 export default function RegistryPage() {
@@ -308,6 +325,7 @@ export default function RegistryPage() {
       const reached = target > 0 && total >= target;
       const disabled = it.already_owned || reached;
       const categoryKey = normalizeCategory(it.category);
+      const categoryLabel = getCategoryLabel(lang, it.category);
 
       return {
         it,
@@ -321,9 +339,10 @@ export default function RegistryPage() {
         reached,
         disabled,
         categoryKey,
+        categoryLabel,
       };
     });
-  }, [items, totals]);
+  }, [items, totals, lang]);
 
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
@@ -408,7 +427,7 @@ export default function RegistryPage() {
                         : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
                     ].join(" ")}
                   >
-                    {categoryLabels[lang][category] ?? category}
+                    {categoryLabels[lang][category] ?? categoryLabels[lang].other}
                   </button>
                 ))}
               </div>
@@ -429,6 +448,7 @@ export default function RegistryPage() {
                   pct,
                   reached,
                   disabled,
+                  categoryLabel,
                 }) => (
                   <button
                     key={it.id}
@@ -462,6 +482,12 @@ export default function RegistryPage() {
 
                     <div className="mt-4 flex items-start justify-between gap-3">
                       <div className="min-w-0">
+                        <div className="mb-2">
+                          <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                            {categoryLabel}
+                          </span>
+                        </div>
+
                         <div className="text-base text-[#5e6a50]">
                           {it.title}
                         </div>
