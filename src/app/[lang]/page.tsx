@@ -50,13 +50,13 @@ type UiItem = {
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
     sleeping: "Slapen",
-    feeding: "Voeden",
+    feeding: "Voeding",
     care: "Verzorging",
     travel: "Onderweg",
     toys: "Speelgoed",
     clothes: "Kleding",
-    room: "Kamertje",
-    essentials: "Essentials",
+    room: "Babykamer",
+    essentials: "Must-haves",
     other: "Overig",
   },
   ca: {
@@ -105,27 +105,33 @@ const uiText: Record<
     chooseLanguage: string;
     contributionItem: string;
     giftItem: string;
+    loading: string;
+    close: string;
   }
 > = {
   nl: {
     contribute: "Bijdragen",
     viewDetails: "Bekijk item",
     alreadyGifted: "Reeds voorzien",
-    funded: "Gefinancierd",
+    funded: "Bevestigd",
     reported: "Aangekondigd",
     chooseLanguage: "Taal",
     contributionItem: "Bijdrage-item",
     giftItem: "Cadeau-item",
+    loading: "Laden...",
+    close: "Sluiten",
   },
   ca: {
     contribute: "Contribuir",
     viewDetails: "Veure article",
     alreadyGifted: "Ja previst",
-    funded: "Finançat",
+    funded: "Confirmat",
     reported: "Anunciat",
     chooseLanguage: "Idioma",
     contributionItem: "Article de contribució",
     giftItem: "Article regal",
+    loading: "Carregant...",
+    close: "Tancar",
   },
   en: {
     contribute: "Contribute",
@@ -136,6 +142,8 @@ const uiText: Record<
     chooseLanguage: "Language",
     contributionItem: "Contribution item",
     giftItem: "Gift item",
+    loading: "Loading...",
+    close: "Close",
   },
   es: {
     contribute: "Contribuir",
@@ -146,6 +154,8 @@ const uiText: Record<
     chooseLanguage: "Idioma",
     contributionItem: "Artículo de contribución",
     giftItem: "Artículo regalo",
+    loading: "Cargando...",
+    close: "Cerrar",
   },
 };
 
@@ -158,10 +168,13 @@ const languageOptions: { code: Lang; label: string }[] = [
 
 function euro(cents: number, lang: Lang) {
   const locale =
-    lang === "nl" ? "nl-BE" :
-    lang === "ca" ? "ca-ES" :
-    lang === "es" ? "es-ES" :
-    "en-GB";
+    lang === "nl"
+      ? "nl-BE"
+      : lang === "ca"
+      ? "ca-ES"
+      : lang === "es"
+      ? "es-ES"
+      : "en-GB";
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -174,15 +187,53 @@ function clamp01(n: number) {
 }
 
 function normalizeCategory(value: string | null | undefined) {
-  if (!value) return "other";
-  const cleaned = value.trim().toLowerCase();
+  const cleaned = (value ?? "").trim().toLowerCase();
   if (!cleaned) return "other";
-  return cleaned;
+
+  const aliases: Record<string, string> = {
+    sleep: "sleeping",
+    sleeping: "sleeping",
+
+    feeding: "feeding",
+    food: "feeding",
+
+    care: "care",
+    hygiene: "care",
+    care_hygiene: "care",
+    oral_care_teething: "care",
+    verzorging: "care",
+
+    travel: "travel",
+    onderweg: "travel",
+    outdoor_travel: "travel",
+
+    toys: "toys",
+    speelgoed: "toys",
+    play_development: "toys",
+
+    clothes: "clothes",
+    clothing: "clothes",
+    kleding: "clothes",
+    textiles: "clothes",
+
+    room: "room",
+    nursery: "room",
+    babykamer: "room",
+
+    essentials: "essentials",
+    musthaves: "essentials",
+    must_haves: "essentials",
+
+    other: "other",
+    overig: "other",
+  };
+
+  return aliases[cleaned] ?? cleaned;
 }
 
 function categoryLabel(lang: Lang, category: string | null) {
   const key = normalizeCategory(category);
-  return categoryLabels[lang][key] ?? category ?? categoryLabels[lang].other;
+  return categoryLabels[lang][key] ?? categoryLabels[lang].other;
 }
 
 export default function RegistryPage() {
@@ -228,8 +279,10 @@ export default function RegistryPage() {
 
       if (error) {
         console.error(error);
-        setItems([]);
-        setLoading(false);
+        if (!cancelled) {
+          setItems([]);
+          setLoading(false);
+        }
         return;
       }
 
@@ -278,7 +331,7 @@ export default function RegistryPage() {
     return Array.from(groups.entries())
       .map(([key, groupItems]) => ({
         key,
-        label: categoryLabel(lang, groupItems[0]?.category ?? key),
+        label: categoryLabels[lang][key] ?? categoryLabels[lang].other,
         items: groupItems.sort((a, b) => a.sort_order - b.sort_order),
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -286,18 +339,20 @@ export default function RegistryPage() {
 
   const t = uiText[lang];
 
+  function goToItem(item: UiItem) {
+    router.push(`/${lang}/item/${item.slug}`);
+  }
+
   return (
-    <main className="min-h-screen bg-neutral-50 pb-28">
+    <main className="min-h-screen bg-[#f8f6f2] pb-28">
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">
-              Baby Registry
-            </h1>
+            <h1 className="text-3xl text-[#5e6a50]">Baby Registry</h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-neutral-500">{t.chooseLanguage}</span>
+            <span className="text-sm text-[#7c8570]">{t.chooseLanguage}</span>
             <div className="flex flex-wrap gap-2">
               {languageOptions.map((option) => {
                 const active = option.code === lang;
@@ -306,11 +361,12 @@ export default function RegistryPage() {
                     key={option.code}
                     type="button"
                     onClick={() => router.push(`/${option.code}`)}
-                    className={`rounded-full px-3 py-2 text-sm transition ${
+                    className={[
+                      "rounded-full px-3 py-2 text-sm transition",
                       active
-                        ? "bg-neutral-900 text-white"
-                        : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-100"
-                    }`}
+                        ? "bg-[#5e6a50] text-white"
+                        : "bg-white text-[#5e6a50] ring-1 ring-[#d8ddd1] hover:bg-[#f3f1eb]",
+                    ].join(" ")}
                   >
                     {option.label}
                   </button>
@@ -321,16 +377,14 @@ export default function RegistryPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-            Loading...
+          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#d8ddd1] text-[#5e6a50]">
+            {t.loading}
           </div>
         ) : (
           <div className="space-y-10">
             {groupedItems.map((group) => (
               <section key={group.key}>
-                <h2 className="mb-4 text-xl font-semibold text-neutral-900">
-                  {group.label}
-                </h2>
+                <h2 className="mb-4 text-xl text-[#5e6a50]">{group.label}</h2>
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {group.items.map((item) => {
@@ -343,18 +397,18 @@ export default function RegistryPage() {
                     return (
                       <article
                         key={item.id}
-                        className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-neutral-200"
+                        className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#d8ddd1]"
                       >
-                        <div className="relative aspect-[4/3] bg-neutral-100">
+                        <div className="relative aspect-[4/3] bg-[#f3f1eb]">
                           {item.image_url ? (
                             <Image
                               src={item.image_url}
                               alt={item.title}
                               fill
-                              className="object-cover"
+                              className="object-contain p-3"
                             />
                           ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+                            <div className="flex h-full items-center justify-center text-sm text-[#8d9484]">
                               No image
                             </div>
                           )}
@@ -362,42 +416,44 @@ export default function RegistryPage() {
 
                         <div className="p-5">
                           <div className="mb-2 flex items-start justify-between gap-3">
-                            <h3 className="text-lg font-semibold text-neutral-900">
+                            <h3 className="text-lg text-[#5e6a50]">
                               {item.title}
                             </h3>
 
-                            <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600">
-                              {item.is_contribution_item ? t.contributionItem : t.giftItem}
+                            <span className="rounded-full bg-[#ecefe7] px-2.5 py-1 text-xs text-[#5e6a50]">
+                              {item.is_contribution_item
+                                ? t.contributionItem
+                                : t.giftItem}
                             </span>
                           </div>
 
                           {item.description ? (
-                            <p className="mb-4 text-sm leading-6 text-neutral-600">
+                            <p className="mb-4 text-sm leading-6 text-[#7c8570]">
                               {item.description}
                             </p>
                           ) : null}
 
                           {item.already_owned ? (
-                            <div className="mb-4 rounded-2xl bg-neutral-100 px-3 py-2 text-sm text-neutral-700">
+                            <div className="mb-4 rounded-2xl bg-[#ecefe7] px-3 py-2 text-sm text-[#5e6a50]">
                               {t.alreadyGifted}
                             </div>
                           ) : null}
 
                           {item.is_contribution_item && item.target_cents ? (
                             <div className="mb-5">
-                              <div className="mb-2 flex items-center justify-between text-sm text-neutral-600">
+                              <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
                                 <span>{euro(funded + reported, lang)}</span>
                                 <span>{euro(item.target_cents, lang)}</span>
                               </div>
 
-                              <div className="h-2.5 overflow-hidden rounded-full bg-neutral-200">
+                              <div className="h-2.5 overflow-hidden rounded-full bg-[#e8ebe3]">
                                 <div
-                                  className="h-full rounded-full bg-neutral-900 transition-all"
+                                  className="h-full rounded-full bg-[#5e6a50] transition-all"
                                   style={{ width: `${progress * 100}%` }}
                                 />
                               </div>
 
-                              <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+                              <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
                                 <span>
                                   {t.funded}: {euro(funded, lang)}
                                 </span>
@@ -412,16 +468,16 @@ export default function RegistryPage() {
                             {item.is_contribution_item && !item.already_owned ? (
                               <button
                                 type="button"
-                                onClick={() => router.push(`/${lang}/contribute/${item.slug}`)}
-                                className="flex-1 rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+                                onClick={() => goToItem(item)}
+                                className="flex-1 rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white transition hover:opacity-90"
                               >
                                 {t.contribute}
                               </button>
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => setSelectedItem(item)}
-                                className="flex-1 rounded-2xl bg-neutral-100 px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-200"
+                                onClick={() => goToItem(item)}
+                                className="flex-1 rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
                               >
                                 {t.viewDetails}
                               </button>
@@ -430,8 +486,8 @@ export default function RegistryPage() {
                             {!item.is_contribution_item ? (
                               <button
                                 type="button"
-                                onClick={() => setSelectedItem(item)}
-                                className="rounded-2xl bg-neutral-100 px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-200"
+                                onClick={() => goToItem(item)}
+                                className="rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
                               >
                                 +
                               </button>
@@ -451,18 +507,18 @@ export default function RegistryPage() {
       {selectedItem ? (
         <div className="fixed inset-0 z-40 flex items-end bg-black/40 p-4 md:items-center md:justify-center">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <h3 className="mb-3 text-xl font-semibold text-neutral-900">
+            <h3 className="mb-3 text-xl text-[#5e6a50]">
               {selectedItem.title}
             </h3>
 
             {selectedItem.description ? (
-              <p className="mb-4 text-sm leading-6 text-neutral-600">
+              <p className="mb-4 text-sm leading-6 text-[#7c8570]">
                 {selectedItem.description}
               </p>
             ) : null}
 
             {selectedItem.is_contribution_item && selectedItem.target_cents ? (
-              <p className="mb-6 text-sm text-neutral-500">
+              <p className="mb-6 text-sm text-[#7c8570]">
                 {euro(selectedItem.paid_cents + selectedItem.reported_cents, lang)} /{" "}
                 {euro(selectedItem.target_cents, lang)}
               </p>
@@ -472,8 +528,8 @@ export default function RegistryPage() {
               {selectedItem.is_contribution_item && !selectedItem.already_owned ? (
                 <button
                   type="button"
-                  onClick={() => router.push(`/${lang}/contribute/${selectedItem.slug}`)}
-                  className="flex-1 rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white"
+                  onClick={() => goToItem(selectedItem)}
+                  className="flex-1 rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white"
                 >
                   {t.contribute}
                 </button>
@@ -482,9 +538,9 @@ export default function RegistryPage() {
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="flex-1 rounded-2xl bg-neutral-100 px-4 py-3 text-sm font-medium text-neutral-800"
+                className="flex-1 rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50]"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>
@@ -492,11 +548,11 @@ export default function RegistryPage() {
       ) : null}
 
       {selectedItem && selectedItem.is_contribution_item && !selectedItem.already_owned ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#d8ddd1] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
           <button
             type="button"
-            onClick={() => router.push(`/${lang}/contribute/${selectedItem.slug}`)}
-            className="w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white"
+            onClick={() => goToItem(selectedItem)}
+            className="w-full rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white"
           >
             {t.contribute}
           </button>
