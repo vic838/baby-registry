@@ -41,7 +41,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="pb-3 text-center text-xs text-neutral-400">
+            <div className="pb-3 text-center text-xs text-[#5e6a50]">
               Tik om verder te gaan
             </div>
           </>
@@ -62,8 +62,8 @@ export default function LandingPage() {
                 <div className="relative h-[36svh] min-h-[220px] w-full">
                   <img
                     src="/landing-baby.webp"
-                    alt="Baby"
-                    className="absolute inset-0 h-full w-full object-cover object-center"
+                    alt="Cleo"
+                    className="absolute inset-0 h-auto w-full object-cover object-contain"
                   />
                 </div>
               </div>
