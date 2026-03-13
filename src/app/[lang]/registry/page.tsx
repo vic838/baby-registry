@@ -34,7 +34,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     toys: "Speelgoed",
     clothes: "Kleding",
     room: "Babykamer",
-    essentials: "Essentials",
+    essentials: "Must-haves",
     other: "Overig",
   },
   ca: {
@@ -46,7 +46,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     toys: "Joguines",
     clothes: "Roba",
     room: "Habitació",
-    essentials: "Essencials",
+    essentials: "Imprescindibles",
     other: "Altres",
   },
   en: {
@@ -70,7 +70,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     toys: "Juguetes",
     clothes: "Ropa",
     room: "Habitación",
-    essentials: "Esenciales",
+    essentials: "Imprescindibles",
     other: "Otros",
   },
 };
@@ -194,7 +194,34 @@ function clamp01(n: number) {
 
 function normalizeCategory(category: string | null | undefined) {
   const value = (category ?? "").trim().toLowerCase();
-  return value || "other";
+
+  const aliases: Record<string, string> = {
+    sleep: "sleeping",
+    sleeping: "sleeping",
+    feeding: "feeding",
+    food: "feeding",
+    care: "care",
+    hygiene: "care",
+    care_hygiene: "care",
+    verzorging: "care",
+    travel: "travel",
+    onderweg: "travel",
+    toys: "toys",
+    speelgoed: "toys",
+    clothes: "clothes",
+    clothing: "clothes",
+    kleding: "clothes",
+    room: "room",
+    nursery: "room",
+    babykamer: "room",
+    essentials: "essentials",
+    musthaves: "essentials",
+    must_haves: "essentials",
+    other: "other",
+    overig: "other",
+  };
+
+  return aliases[value] ?? (value || "other");
 }
 
 export default function RegistryPage() {
@@ -326,38 +353,44 @@ export default function RegistryPage() {
   }, [availableCategories, selectedCategory]);
 
   if (loading) {
-    return <main className="p-6">{t.loading}</main>;
+    return (
+      <main className="min-h-screen bg-[#f8f6f2] px-6 py-8 text-[#5e6a50]">
+        {t.loading}
+      </main>
+    );
   }
 
   if (error) {
-    return <main className="p-6 text-red-600">Fout: {error}</main>;
+    return (
+      <main className="min-h-screen bg-[#f8f6f2] px-6 py-8 text-red-600">
+        Fout: {error}
+      </main>
+    );
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#f8f6f2]">
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-2xl font-semibold">{t.title}</h1>
+        <h1 className="text-2xl text-[#5e6a50]">{t.title}</h1>
 
-        <div className="mt-2 text-sm text-gray-600">{t.subtitle}</div>
+        <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
 
         {cards.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-600">
+          <div className="mt-8 rounded-2xl border border-[#d8ddd1] bg-white p-6 text-sm text-[#6c7561] shadow-sm">
             {t.empty}
           </div>
         ) : (
           <>
-            <div className="relative mt-4">
-              <div
-                className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
+            <div className="relative mt-5">
+              <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("all")}
                   className={[
-                    "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                    "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
                     selectedCategory === "all"
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+                      ? "border-[#5e6a50] bg-[#5e6a50] text-white"
+                      : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
                   ].join(" ")}
                 >
                   {categoryLabels[lang].all}
@@ -369,10 +402,10 @@ export default function RegistryPage() {
                     type="button"
                     onClick={() => setSelectedCategory(category)}
                     className={[
-                      "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                      "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
                       selectedCategory === category
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+                        ? "border-[#5e6a50] bg-[#5e6a50] text-white"
+                        : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
                     ].join(" ")}
                   >
                     {categoryLabels[lang][category] ?? category}
@@ -380,7 +413,7 @@ export default function RegistryPage() {
                 ))}
               </div>
 
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#f8f6f2] to-transparent" />
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -407,43 +440,49 @@ export default function RegistryPage() {
                       }
                     }}
                     className={[
-                      "text-left rounded-2xl border bg-white p-4 shadow-sm transition",
+                      "rounded-2xl border border-[#d8ddd1] bg-white p-4 text-left shadow-sm transition",
                       disabled
                         ? "cursor-not-allowed opacity-60"
                         : "hover:-translate-y-0.5 hover:shadow-md",
                     ].join(" ")}
                   >
                     {it.image_url ? (
-                      <img
-                        src={it.image_url}
-                        alt={it.title}
-                        className="h-40 w-full rounded-xl object-cover"
-                      />
+                      <div className="rounded-xl bg-[#f8f6f2] p-3">
+                        <img
+                          src={it.image_url}
+                          alt={it.title}
+                          className="h-44 w-full rounded-lg object-contain"
+                        />
+                      </div>
                     ) : (
-                      <div className="h-40 w-full rounded-xl bg-gray-100" />
+                      <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
+                        No image
+                      </div>
                     )}
 
                     <div className="mt-4 flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-semibold">{it.title}</div>
+                        <div className="text-base text-[#5e6a50]">
+                          {it.title}
+                        </div>
 
                         {it.description ? (
-                          <div className="mt-1 line-clamp-2 text-sm text-gray-600">
+                          <div className="mt-1 line-clamp-2 text-sm text-[#7c8570]">
                             {it.description}
                           </div>
                         ) : null}
                       </div>
 
                       {it.already_owned ? (
-                        <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                        <span className="shrink-0 rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
                           {t.alreadyBought}
                         </span>
                       ) : reached ? (
-                        <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                        <span className="shrink-0 rounded-full bg-[#dfe7d7] px-3 py-1 text-xs text-[#4f5a44]">
                           {t.full}
                         </span>
                       ) : (
-                        <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                        <span className="shrink-0 rounded-full bg-[#f4efe3] px-3 py-1 text-xs text-[#8a7753]">
                           {t.available}
                         </span>
                       )}
@@ -451,15 +490,15 @@ export default function RegistryPage() {
 
                     <div className="mt-4">
                       <div className="flex items-start justify-between gap-4 text-sm">
-                        <div className="text-gray-600">
+                        <div className="text-[#7c8570]">
                           <div>
                             {t.total}:{" "}
-                            <span className="font-medium text-gray-900">
+                            <span className="text-[#5e6a50]">
                               {euro(total, lang)}
                             </span>
                           </div>
 
-                          <div className="mt-1 text-xs text-gray-500">
+                          <div className="mt-1 text-xs text-[#9ba292]">
                             {euro(paid, lang)} {t.confirmed}
                             {reported > 0
                               ? ` · ${euro(reported, lang)} ${t.reported}`
@@ -467,28 +506,28 @@ export default function RegistryPage() {
                           </div>
                         </div>
 
-                        <div className="text-right text-gray-600">
+                        <div className="text-right text-[#7c8570]">
                           <div>
                             {t.target}:{" "}
-                            <span className="font-medium text-gray-900">
+                            <span className="text-[#5e6a50]">
                               {target > 0 ? euro(target, lang) : "—"}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
                         <div
-                          className="h-2 bg-gray-300"
+                          className="h-2 bg-[#cfd5c7]"
                           style={{ width: `${Math.round(totalProgress * 100)}%` }}
                         />
                         <div
-                          className="-mt-2 h-2 bg-gray-900"
+                          className="-mt-2 h-2 bg-[#5e6a50]"
                           style={{ width: `${Math.round(paidProgress * 100)}%` }}
                         />
                       </div>
 
-                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                      <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
                         <span>
                           {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
                         </span>
