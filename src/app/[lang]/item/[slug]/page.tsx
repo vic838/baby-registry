@@ -14,7 +14,7 @@ type Item = {
   image_url: string | null;
   already_owned: boolean;
   target_cents: number | null;
-  is_open: boolean;
+  is_active: boolean;
   category: string | null;
 };
 
@@ -22,6 +22,19 @@ type TotalsRow = {
   item_id: string;
   paid_cents: number;
   reported_cents: number;
+};
+
+type ItemViewRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  already_owned: boolean;
+  target_cents: number | null;
+  is_active: boolean;
+  category: string | null;
+  lang: Lang;
 };
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
@@ -102,7 +115,7 @@ const uiText: Record<
     available: "Beschikbaar",
     noTarget: "Geen doelbedrag ingesteld",
     ofGoal: "van doel",
-    contribute: "Draag bij",
+    contribute: "Ga verder om bij te dragen",
   },
   ca: {
     back: "← Tornar a la llista",
@@ -117,7 +130,7 @@ const uiText: Record<
     available: "Disponible",
     noTarget: "No hi ha import objectiu",
     ofGoal: "de l’objectiu",
-    contribute: "Contribuir",
+    contribute: "Continuar per contribuir",
   },
   en: {
     back: "← Back to list",
@@ -132,7 +145,7 @@ const uiText: Record<
     available: "Available",
     noTarget: "No target amount set",
     ofGoal: "of goal",
-    contribute: "Contribute",
+    contribute: "Continue to contribute",
   },
   es: {
     back: "← Volver a la lista",
@@ -147,7 +160,7 @@ const uiText: Record<
     available: "Disponible",
     noTarget: "No hay importe objetivo",
     ofGoal: "del objetivo",
-    contribute: "Contribuir",
+    contribute: "Continuar para contribuir",
   },
 };
 
@@ -194,6 +207,7 @@ function normalizeCategory(category: string | null | undefined) {
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
+    play: "toys",
 
     clothes: "clothes",
     clothing: "clothes",
@@ -202,6 +216,7 @@ function normalizeCategory(category: string | null | undefined) {
 
     room: "room",
     nursery: "room",
+    furniture: "room",
     babykamer: "room",
 
     essentials: "essentials",
@@ -218,7 +233,10 @@ function normalizeCategory(category: string | null | undefined) {
 export default function ItemDetailPage() {
   const router = useRouter();
   const params = useParams<{ lang: string; slug: string }>();
-  const lang = ((params.lang ?? "nl") as Lang) || "nl";
+  const routeLang = params.lang ?? "nl";
+  const lang: Lang = ["nl", "ca", "en", "es"].includes(routeLang)
+    ? (routeLang as Lang)
+    : "nl";
   const slug = params.slug;
   const t = uiText[lang];
 
@@ -236,32 +254,48 @@ export default function ItemDetailPage() {
         setError(null);
 
         const { data: itemData, error: itemError } = await supabase
-          .from("items")
+          .from("items_with_translations")
           .select(
-            "id,slug,title,description,image_url,already_owned,target_cents,is_open,category"
+            "id,slug,title,description,image_url,already_owned,target_cents,is_active,category,lang"
           )
           .eq("slug", slug)
-          .eq("is_open", true)
+          .eq("lang", lang)
+          .eq("is_active", true)
           .maybeSingle();
 
         if (itemError) throw itemError;
+
         if (!itemData) {
           if (!isMounted) return;
           setItem(null);
+          setTotals(null);
           return;
         }
+
+        const typedItem = itemData as ItemViewRow;
 
         const { data: totalsData, error: totalsError } = await supabase
           .from("item_totals")
           .select("item_id,paid_cents,reported_cents")
-          .eq("item_id", itemData.id)
+          .eq("item_id", typedItem.id)
           .maybeSingle();
 
         if (totalsError) throw totalsError;
 
         if (!isMounted) return;
 
-        setItem(itemData as Item);
+        setItem({
+          id: typedItem.id,
+          slug: typedItem.slug,
+          title: typedItem.title,
+          description: typedItem.description ?? null,
+          image_url: typedItem.image_url,
+          already_owned: typedItem.already_owned,
+          target_cents: typedItem.target_cents,
+          is_active: typedItem.is_active,
+          category: typedItem.category,
+        });
+
         setTotals(
           totalsData
             ? {
@@ -270,7 +304,7 @@ export default function ItemDetailPage() {
                 reported_cents: Number(totalsData.reported_cents ?? 0),
               }
             : {
-                item_id: itemData.id,
+                item_id: typedItem.id,
                 paid_cents: 0,
                 reported_cents: 0,
               }
@@ -287,7 +321,7 @@ export default function ItemDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, lang]);
 
   const view = useMemo(() => {
     if (!item) return null;
@@ -450,7 +484,7 @@ export default function ItemDetailPage() {
             <button
               type="button"
               disabled={view.disabled}
-              onClick={() => router.push(`/${lang}/pay/${item.id}`)}
+              onClick={() => router.push(`/${lang}/contribute/${item.slug}`)}
               className={[
                 "w-full rounded-2xl px-5 py-4 text-center transition",
                 view.disabled

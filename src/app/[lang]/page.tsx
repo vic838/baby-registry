@@ -7,29 +7,25 @@ import { supabase } from "@/lib/supabaseClient";
 
 type Lang = "nl" | "ca" | "en" | "es";
 
-type TranslationRow = {
-  lang: Lang;
-  title: string;
-  description: string | null;
-};
-
 type TotalsRow = {
+  item_id: string;
   paid_cents: number;
   reported_cents: number;
 };
 
-type ItemRow = {
+type ViewRow = {
   id: string;
   slug: string;
   image_url: string | null;
   already_owned: boolean;
   target_cents: number | null;
-  sort_order: number;
+  sort_order: number | null;
   is_active: boolean;
   category: string | null;
   is_contribution_item: boolean;
-  item_translations: TranslationRow[];
-  item_totals: TotalsRow[] | null;
+  lang: Lang;
+  title: string;
+  description: string | null;
 };
 
 type UiItem = {
@@ -97,6 +93,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
 const uiText: Record<
   Lang,
   {
+    pageTitle: string;
     contribute: string;
     viewDetails: string;
     alreadyGifted: string;
@@ -107,9 +104,11 @@ const uiText: Record<
     giftItem: string;
     loading: string;
     close: string;
+    empty: string;
   }
 > = {
   nl: {
+    pageTitle: "Geboortelijst",
     contribute: "Bijdragen",
     viewDetails: "Bekijk item",
     alreadyGifted: "Reeds voorzien",
@@ -120,8 +119,10 @@ const uiText: Record<
     giftItem: "Cadeau-item",
     loading: "Laden...",
     close: "Sluiten",
+    empty: "Er zijn momenteel geen items beschikbaar.",
   },
   ca: {
+    pageTitle: "Llista de naixement",
     contribute: "Contribuir",
     viewDetails: "Veure article",
     alreadyGifted: "Ja previst",
@@ -132,8 +133,10 @@ const uiText: Record<
     giftItem: "Article regal",
     loading: "Carregant...",
     close: "Tancar",
+    empty: "Actualment no hi ha articles disponibles.",
   },
   en: {
+    pageTitle: "Baby Registry",
     contribute: "Contribute",
     viewDetails: "View item",
     alreadyGifted: "Already covered",
@@ -144,8 +147,10 @@ const uiText: Record<
     giftItem: "Gift item",
     loading: "Loading...",
     close: "Close",
+    empty: "There are currently no items available.",
   },
   es: {
+    pageTitle: "Lista de nacimiento",
     contribute: "Contribuir",
     viewDetails: "Ver artículo",
     alreadyGifted: "Ya previsto",
@@ -156,6 +161,7 @@ const uiText: Record<
     giftItem: "Artículo regalo",
     loading: "Cargando...",
     close: "Cerrar",
+    empty: "Actualmente no hay artículos disponibles.",
   },
 };
 
@@ -210,6 +216,7 @@ function normalizeCategory(value: string | null | undefined) {
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
+    play: "toys",
 
     clothes: "clothes",
     clothing: "clothes",
@@ -218,6 +225,7 @@ function normalizeCategory(value: string | null | undefined) {
 
     room: "room",
     nursery: "room",
+    furniture: "room",
     babykamer: "room",
 
     essentials: "essentials",
@@ -231,15 +239,13 @@ function normalizeCategory(value: string | null | undefined) {
   return aliases[cleaned] ?? cleaned;
 }
 
-function categoryLabel(lang: Lang, category: string | null) {
-  const key = normalizeCategory(category);
-  return categoryLabels[lang][key] ?? categoryLabels[lang].other;
-}
-
 export default function RegistryPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
-  const lang = (params.lang ?? "nl") as Lang;
+  const routeLang = params.lang ?? "nl";
+  const lang: Lang = ["nl", "ca", "en", "es"].includes(routeLang)
+    ? (routeLang as Lang)
+    : "nl";
 
   const [items, setItems] = useState<UiItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,34 +257,21 @@ export default function RegistryPage() {
     async function loadItems() {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from("items")
-        .select(`
-          id,
-          slug,
-          image_url,
-          already_owned,
-          target_cents,
-          sort_order,
-          is_active,
-          category,
-          is_contribution_item,
-          item_translations!inner (
-            lang,
-            title,
-            description
-          ),
-          item_totals (
-            paid_cents,
-            reported_cents
-          )
-        `)
-        .eq("is_active", true)
-        .eq("item_translations.lang", lang)
-        .order("sort_order", { ascending: true });
+      const [{ data: viewData, error: viewError }, { data: totalsData, error: totalsError }] =
+        await Promise.all([
+          supabase
+            .from("items_with_translations")
+            .select(
+              "id,slug,image_url,already_owned,target_cents,sort_order,is_active,category,is_contribution_item,lang,title,description"
+            )
+            .eq("lang", lang)
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+          supabase.from("item_totals").select("item_id,paid_cents,reported_cents"),
+        ]);
 
-      if (error) {
-        console.error(error);
+      if (viewError) {
+        console.error(viewError);
         if (!cancelled) {
           setItems([]);
           setLoading(false);
@@ -286,25 +279,44 @@ export default function RegistryPage() {
         return;
       }
 
-      const mapped: UiItem[] = ((data ?? []) as ItemRow[]).map((row) => {
-        const translation = row.item_translations?.[0];
-        const totals = row.item_totals?.[0];
+      if (totalsError) {
+        console.error(totalsError);
+        if (!cancelled) {
+          setItems([]);
+          setLoading(false);
+        }
+        return;
+      }
 
-        return {
-          id: row.id,
-          slug: row.slug,
-          title: translation?.title ?? row.slug,
-          description: translation?.description ?? null,
-          image_url: row.image_url,
-          already_owned: row.already_owned,
-          target_cents: row.target_cents,
-          sort_order: row.sort_order,
-          category: row.category,
-          is_contribution_item: row.is_contribution_item,
-          paid_cents: totals?.paid_cents ?? 0,
-          reported_cents: totals?.reported_cents ?? 0,
+      const totalsMap: Record<string, TotalsRow> = {};
+      ((totalsData ?? []) as TotalsRow[]).forEach((row) => {
+        totalsMap[row.item_id] = {
+          item_id: row.item_id,
+          paid_cents: Number(row.paid_cents ?? 0),
+          reported_cents: Number(row.reported_cents ?? 0),
         };
       });
+
+      const mapped: UiItem[] = ((viewData ?? []) as ViewRow[])
+        .filter((row) => row.slug && row.title)
+        .map((row) => {
+          const totals = totalsMap[row.id];
+
+          return {
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            description: row.description ?? null,
+            image_url: row.image_url,
+            already_owned: row.already_owned,
+            target_cents: row.target_cents,
+            sort_order: Number(row.sort_order ?? 0),
+            category: row.category,
+            is_contribution_item: row.is_contribution_item,
+            paid_cents: totals?.paid_cents ?? 0,
+            reported_cents: totals?.reported_cents ?? 0,
+          };
+        });
 
       if (!cancelled) {
         setItems(mapped);
@@ -348,7 +360,7 @@ export default function RegistryPage() {
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl text-[#5e6a50]">Baby Registry</h1>
+            <h1 className="text-3xl text-[#5e6a50]">{t.pageTitle}</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -377,8 +389,12 @@ export default function RegistryPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#d8ddd1] text-[#5e6a50]">
+          <div className="rounded-2xl bg-white p-6 text-[#5e6a50] shadow-sm ring-1 ring-[#d8ddd1]">
             {t.loading}
+          </div>
+        ) : groupedItems.length === 0 ? (
+          <div className="rounded-2xl bg-white p-6 text-[#5e6a50] shadow-sm ring-1 ring-[#d8ddd1]">
+            {t.empty}
           </div>
         ) : (
           <div className="space-y-10">
@@ -519,8 +535,11 @@ export default function RegistryPage() {
 
             {selectedItem.is_contribution_item && selectedItem.target_cents ? (
               <p className="mb-6 text-sm text-[#7c8570]">
-                {euro(selectedItem.paid_cents + selectedItem.reported_cents, lang)} /{" "}
-                {euro(selectedItem.target_cents, lang)}
+                {euro(
+                  selectedItem.paid_cents + selectedItem.reported_cents,
+                  lang
+                )}{" "}
+                / {euro(selectedItem.target_cents, lang)}
               </p>
             ) : null}
 

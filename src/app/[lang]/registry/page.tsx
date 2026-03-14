@@ -14,8 +14,11 @@ type Item = {
   image_url: string | null;
   already_owned: boolean;
   target_cents: number | null;
-  is_open: boolean;
+  is_active: boolean;
   category: string | null;
+  sort_order: number | null;
+  is_contribution_item: boolean;
+  lang: Lang;
 };
 
 type TotalsRow = {
@@ -215,6 +218,7 @@ function normalizeCategory(category: string | null | undefined) {
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
+    play: "toys",
 
     clothes: "clothes",
     clothing: "clothes",
@@ -223,6 +227,7 @@ function normalizeCategory(category: string | null | undefined) {
 
     room: "room",
     nursery: "room",
+    furniture: "room",
     babykamer: "room",
 
     essentials: "essentials",
@@ -244,7 +249,10 @@ function getCategoryLabel(lang: Lang, category: string | null | undefined) {
 export default function RegistryPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
-  const lang = ((params.lang ?? "nl") as Lang) || "nl";
+  const routeLang = params.lang ?? "nl";
+  const lang: Lang = ["nl", "ca", "en", "es"].includes(routeLang)
+    ? (routeLang as Lang)
+    : "nl";
   const t = uiText[lang];
 
   const [items, setItems] = useState<Item[]>([]);
@@ -266,11 +274,12 @@ export default function RegistryPage() {
         const [{ data: itemsData, error: e1 }, { data: totalsData, error: e2 }] =
           await Promise.all([
             supabase
-              .from("items")
+              .from("items_with_translations")
               .select(
-                "id,slug,title,description,image_url,already_owned,target_cents,is_open,category"
+                "id,slug,title,description,image_url,already_owned,target_cents,is_active,category,sort_order,is_contribution_item,lang"
               )
-              .eq("is_open", true)
+              .eq("lang", lang)
+              .eq("is_active", true)
               .order("sort_order", { ascending: true }),
             supabase
               .from("item_totals")
@@ -280,7 +289,9 @@ export default function RegistryPage() {
         if (e1) throw e1;
         if (e2) throw new Error(`Kan totals niet laden: ${e2.message}`);
 
-        const list = (itemsData ?? []) as Item[];
+        const list = ((itemsData ?? []) as Item[]).filter(
+          (row) => row.slug && row.title
+        );
 
         const map: Record<string, TotalsRow> = {};
         ((totalsData ?? []) as TotalsRow[]).forEach((row) => {
@@ -307,7 +318,7 @@ export default function RegistryPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [lang]);
 
   const cards = useMemo(() => {
     return items.map((it) => {
@@ -488,9 +499,7 @@ export default function RegistryPage() {
                           </span>
                         </div>
 
-                        <div className="text-base text-[#5e6a50]">
-                          {it.title}
-                        </div>
+                        <div className="text-base text-[#5e6a50]">{it.title}</div>
 
                         {it.description ? (
                           <div className="mt-1 line-clamp-2 text-sm text-[#7c8570]">

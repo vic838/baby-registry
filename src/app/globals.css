@@ -15,12 +15,10 @@ body {
 /* globale typografie */
 html,
 body,
-button,
 input,
 textarea,
 select,
 label,
-a,
 p,
 span,
 div,
@@ -33,4 +31,9 @@ h5,
 h6 {
   font-family: var(--font-brand);
   color: var(--brand-text);
+}
+
+button,
+a {
+  font-family: var(--font-brand);
 }
