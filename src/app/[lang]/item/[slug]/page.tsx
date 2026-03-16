@@ -16,6 +16,7 @@ type Item = {
   target_cents: number | null;
   is_active: boolean;
   category: string | null;
+  is_contribution_item: boolean;
 };
 
 type TotalsRow = {
@@ -34,6 +35,7 @@ type ItemViewRow = {
   target_cents: number | null;
   is_active: boolean;
   category: string | null;
+  is_contribution_item: boolean;
   lang: Lang;
 };
 
@@ -94,11 +96,12 @@ const uiText: Record<
     target: string;
     confirmed: string;
     reported: string;
-    alreadyBought: string;
+    alreadyOffered: string;
     full: string;
     available: string;
     noTarget: string;
     ofGoal: string;
+    offer: string;
     contribute: string;
   }
 > = {
@@ -110,11 +113,12 @@ const uiText: Record<
     target: "Doel",
     confirmed: "bevestigd",
     reported: "gemeld",
-    alreadyBought: "Al gekocht",
+    alreadyOffered: "Al aangeboden",
     full: "Volzet",
     available: "Beschikbaar",
     noTarget: "Geen doelbedrag ingesteld",
     ofGoal: "van doel",
+    offer: "Ga verder om dit aan te bieden",
     contribute: "Ga verder om bij te dragen",
   },
   ca: {
@@ -125,11 +129,12 @@ const uiText: Record<
     target: "Objectiu",
     confirmed: "confirmat",
     reported: "anunciat",
-    alreadyBought: "Ja comprat",
+    alreadyOffered: "Ja ofert",
     full: "Complet",
     available: "Disponible",
     noTarget: "No hi ha import objectiu",
     ofGoal: "de l’objectiu",
+    offer: "Continuar per oferir-ho",
     contribute: "Continuar per contribuir",
   },
   en: {
@@ -140,11 +145,12 @@ const uiText: Record<
     target: "Target",
     confirmed: "confirmed",
     reported: "reported",
-    alreadyBought: "Already bought",
+    alreadyOffered: "Already offered",
     full: "Fully funded",
     available: "Available",
     noTarget: "No target amount set",
     ofGoal: "of goal",
+    offer: "Continue to offer this",
     contribute: "Continue to contribute",
   },
   es: {
@@ -155,24 +161,19 @@ const uiText: Record<
     target: "Objetivo",
     confirmed: "confirmado",
     reported: "anunciado",
-    alreadyBought: "Ya comprado",
+    alreadyOffered: "Ya ofrecido",
     full: "Completo",
     available: "Disponible",
     noTarget: "No hay importe objetivo",
     ofGoal: "del objetivo",
+    offer: "Continuar para ofrecerlo",
     contribute: "Continuar para contribuir",
   },
 };
 
 function euro(cents: number, lang: Lang) {
   const locale =
-    lang === "nl"
-      ? "nl-BE"
-      : lang === "ca"
-      ? "ca-ES"
-      : lang === "es"
-      ? "es-ES"
-      : "en-GB";
+    lang === "nl" ? "nl-BE" : lang === "ca" ? "ca-ES" : lang === "es" ? "es-ES" : "en-GB";
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -190,39 +191,31 @@ function normalizeCategory(category: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
-
     feeding: "feeding",
     food: "feeding",
-
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
-
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
-
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
-
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
-
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
-
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
-
     other: "other",
     overig: "other",
   };
@@ -256,7 +249,7 @@ export default function ItemDetailPage() {
         const { data: itemData, error: itemError } = await supabase
           .from("items_with_translations")
           .select(
-            "id,slug,title,description,image_url,already_owned,target_cents,is_active,category,lang"
+            "id,slug,title,description,image_url,already_owned,target_cents,is_active,category,is_contribution_item,lang"
           )
           .eq("slug", slug)
           .eq("lang", lang)
@@ -281,7 +274,6 @@ export default function ItemDetailPage() {
           .maybeSingle();
 
         if (totalsError) throw totalsError;
-
         if (!isMounted) return;
 
         setItem({
@@ -294,6 +286,7 @@ export default function ItemDetailPage() {
           target_cents: typedItem.target_cents,
           is_active: typedItem.is_active,
           category: typedItem.category,
+          is_contribution_item: typedItem.is_contribution_item,
         });
 
         setTotals(
@@ -330,15 +323,13 @@ export default function ItemDetailPage() {
     const reported = totals?.reported_cents ?? 0;
     const target = item.target_cents ?? 0;
     const total = paid + reported;
-
     const totalProgress = target > 0 ? clamp01(total / target) : 0;
     const paidProgress = target > 0 ? clamp01(paid / target) : 0;
     const pct = Math.round(totalProgress * 100);
-    const reached = target > 0 && total >= target;
+    const reached = item.is_contribution_item && target > 0 && total >= target;
     const disabled = item.already_owned || reached;
     const categoryKey = normalizeCategory(item.category);
-    const categoryLabel =
-      categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other;
+    const categoryLabel = categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other;
 
     return {
       paid,
@@ -388,9 +379,23 @@ export default function ItemDetailPage() {
     );
   }
 
+  const statusText = item.already_owned
+    ? t.alreadyOffered
+    : view.reached
+    ? t.full
+    : t.available;
+
+  const statusClass = item.already_owned
+    ? "bg-[#ecefe7] text-[#5e6a50]"
+    : view.reached
+    ? "bg-[#dfe7d7] text-[#4f5a44]"
+    : "bg-[#f4efe3] text-[#8a7753]";
+
+  const ctaText = item.is_contribution_item ? t.contribute : t.offer;
+
   return (
     <main className="min-h-screen bg-[#f8f6f2]">
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mx-auto max-w-5xl px-4 py-8">
         <button
           type="button"
           onClick={() => router.push(`/${lang}`)}
@@ -400,100 +405,105 @@ export default function ItemDetailPage() {
         </button>
 
         <div className="rounded-3xl border border-[#d8ddd1] bg-white p-5 shadow-sm">
-          {item.image_url ? (
-            <div className="rounded-2xl bg-[#f8f6f2] p-4">
-              <img
-                src={item.image_url}
-                alt={item.title}
-                className="w-full rounded-xl object-contain"
-              />
-            </div>
-          ) : (
-            <div className="flex h-72 items-center justify-center rounded-2xl bg-[#f3f1eb] text-[#8d9484]">
-              No image
-            </div>
-          )}
-
-          <div className="mt-5">
-            <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
-              {view.categoryLabel}
-            </span>
-          </div>
-
-          <h1 className="mt-4 text-3xl text-[#5e6a50]">{item.title}</h1>
-
-          {item.description ? (
-            <p className="mt-3 text-base leading-7 text-[#7c8570]">
-              {item.description}
-            </p>
-          ) : null}
-
-          <div className="mt-6 grid gap-4 rounded-2xl bg-[#fbfaf7] p-4 sm:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-[minmax(320px,420px)_1fr] lg:items-start">
             <div>
-              <div className="text-sm text-[#7c8570]">{t.total}</div>
-              <div className="mt-1 text-xl text-[#5e6a50]">
-                {euro(view.total, lang)}
-              </div>
-              <div className="mt-1 text-xs text-[#9ba292]">
-                {euro(view.paid, lang)} {t.confirmed}
-                {view.reported > 0
-                  ? ` · ${euro(view.reported, lang)} ${t.reported}`
-                  : ""}
-              </div>
+              {item.image_url ? (
+                <div className="rounded-2xl bg-[#f8f6f2] p-4">
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="mx-auto max-h-[380px] w-full rounded-xl object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-72 items-center justify-center rounded-2xl bg-[#f3f1eb] text-[#8d9484]">
+                  No image
+                </div>
+              )}
             </div>
 
-            <div className="sm:text-right">
-              <div className="text-sm text-[#7c8570]">{t.target}</div>
-              <div className="mt-1 text-xl text-[#5e6a50]">
-                {view.target > 0 ? euro(view.target, lang) : "—"}
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                  {view.categoryLabel}
+                </span>
+
+                <span className={`inline-flex rounded-full px-3 py-1 text-sm ${statusClass}`}>
+                  {statusText}
+                </span>
               </div>
-              <div className="mt-1 text-xs text-[#9ba292]">
-                {view.target > 0 ? `${view.pct}% ${t.ofGoal}` : t.noTarget}
+
+              <h1 className="text-3xl text-[#5e6a50]">{item.title}</h1>
+
+              {item.description ? (
+                <p className="mt-3 text-base leading-7 text-[#7c8570]">
+                  {item.description}
+                </p>
+              ) : null}
+
+              {item.is_contribution_item ? (
+                <>
+                  <div className="mt-6 grid gap-4 rounded-2xl bg-[#fbfaf7] p-4 sm:grid-cols-2">
+                    <div>
+                      <div className="text-sm text-[#7c8570]">{t.total}</div>
+                      <div className="mt-1 text-xl text-[#5e6a50]">
+                        {euro(view.total, lang)}
+                      </div>
+                      <div className="mt-1 text-xs text-[#9ba292]">
+                        {euro(view.paid, lang)} {t.confirmed}
+                        {view.reported > 0
+                          ? ` · ${euro(view.reported, lang)} ${t.reported}`
+                          : ""}
+                      </div>
+                    </div>
+
+                    <div className="sm:text-right">
+                      <div className="text-sm text-[#7c8570]">{t.target}</div>
+                      <div className="mt-1 text-xl text-[#5e6a50]">
+                        {view.target > 0 ? euro(view.target, lang) : "—"}
+                      </div>
+                      <div className="mt-1 text-xs text-[#9ba292]">
+                        {view.target > 0 ? `${view.pct}% ${t.ofGoal}` : t.noTarget}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
+                    <div
+                      className="h-3 bg-[#cfd5c7]"
+                      style={{ width: `${Math.round(view.totalProgress * 100)}%` }}
+                    />
+                    <div
+                      className="-mt-3 h-3 bg-[#5e6a50]"
+                      style={{ width: `${Math.round(view.paidProgress * 100)}%` }}
+                    />
+                  </div>
+                </>
+              ) : item.target_cents ? (
+                <div className="mt-6 rounded-2xl bg-[#fbfaf7] p-4">
+                  <div className="text-sm text-[#7c8570]">{t.target}</div>
+                  <div className="mt-1 text-xl text-[#5e6a50]">
+                    {euro(item.target_cents, lang)}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-8">
+                <button
+                  type="button"
+                  disabled={view.disabled}
+                  onClick={() => router.push(`/${lang}/contribute/${item.slug}`)}
+                  className={[
+                    "w-full rounded-2xl px-5 py-4 text-center transition",
+                    view.disabled
+                      ? "cursor-not-allowed bg-[#e8ebe3] text-[#9ba292]"
+                      : "bg-[#5e6a50] text-white hover:opacity-90",
+                  ].join(" ")}
+                >
+                  {view.disabled ? statusText : ctaText}
+                </button>
               </div>
             </div>
-          </div>
-
-          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
-            <div
-              className="h-3 bg-[#cfd5c7]"
-              style={{ width: `${Math.round(view.totalProgress * 100)}%` }}
-            />
-            <div
-              className="-mt-3 h-3 bg-[#5e6a50]"
-              style={{ width: `${Math.round(view.paidProgress * 100)}%` }}
-            />
-          </div>
-
-          <div className="mt-4">
-            {item.already_owned ? (
-              <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-sm text-[#5e6a50]">
-                {t.alreadyBought}
-              </span>
-            ) : view.reached ? (
-              <span className="inline-flex rounded-full bg-[#dfe7d7] px-3 py-1 text-sm text-[#4f5a44]">
-                {t.full}
-              </span>
-            ) : (
-              <span className="inline-flex rounded-full bg-[#f4efe3] px-3 py-1 text-sm text-[#8a7753]">
-                {t.available}
-              </span>
-            )}
-          </div>
-
-          <div className="mt-8">
-            <button
-              type="button"
-              disabled={view.disabled}
-              onClick={() => router.push(`/${lang}/contribute/${item.slug}`)}
-              className={[
-                "w-full rounded-2xl px-5 py-4 text-center transition",
-                view.disabled
-                  ? "cursor-not-allowed bg-[#e8ebe3] text-[#9ba292]"
-                  : "bg-[#5e6a50] text-white hover:opacity-90",
-              ].join(" ")}
-            >
-              {t.contribute}
-            </button>
           </div>
         </div>
       </div>

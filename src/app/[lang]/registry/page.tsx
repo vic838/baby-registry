@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 type Lang = "nl" | "ca" | "en" | "es";
+type StatusFilter = "all" | "available" | "offered";
+type SortOption = "manual" | "price_asc" | "price_desc";
 
 type Item = {
   id: string;
@@ -89,77 +91,132 @@ const uiText: Record<
     target: string;
     confirmed: string;
     reported: string;
-    alreadyBought: string;
+    alreadyOffered: string;
     full: string;
     available: string;
     noTarget: string;
     ofGoal: string;
     darkConfirmed: string;
+    filters: string;
+    status: string;
+    sort: string;
+    statusAll: string;
+    statusAvailable: string;
+    statusOffered: string;
+    sortManual: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+    offer: string;
+    contribute: string;
   }
 > = {
   nl: {
     title: "Geboortelijst",
-    subtitle: "Kies een cadeau en draag bij aan een item.",
+    subtitle: "Kies een cadeau of draag bij aan een item.",
     empty: "Er staan momenteel geen open items op de geboortelijst.",
     loading: "Laden…",
     total: "Totaal",
     target: "Doel",
     confirmed: "bevestigd",
     reported: "gemeld",
-    alreadyBought: "Al gekocht",
+    alreadyOffered: "Al aangeboden",
     full: "Volzet",
     available: "Beschikbaar",
     noTarget: "Geen doelbedrag ingesteld",
     ofGoal: "van doel",
     darkConfirmed: "donker = bevestigd",
+    filters: "Filters",
+    status: "Status",
+    sort: "Sortering",
+    statusAll: "Alles",
+    statusAvailable: "Beschikbaar",
+    statusOffered: "Al aangeboden",
+    sortManual: "Standaard",
+    sortPriceAsc: "Prijs laag → hoog",
+    sortPriceDesc: "Prijs hoog → laag",
+    offer: "Aanbieden",
+    contribute: "Bijdragen",
   },
   ca: {
     title: "Llista de naixement",
-    subtitle: "Tria un regal i contribueix a un article.",
+    subtitle: "Tria un regal o contribueix a un article.",
     empty: "Actualment no hi ha articles oberts a la llista de naixement.",
     loading: "Carregant…",
     total: "Total",
     target: "Objectiu",
     confirmed: "confirmat",
     reported: "anunciat",
-    alreadyBought: "Ja comprat",
+    alreadyOffered: "Ja ofert",
     full: "Complet",
     available: "Disponible",
     noTarget: "No hi ha import objectiu",
     ofGoal: "de l’objectiu",
     darkConfirmed: "fosc = confirmat",
+    filters: "Filtres",
+    status: "Estat",
+    sort: "Ordenació",
+    statusAll: "Tots",
+    statusAvailable: "Disponible",
+    statusOffered: "Ja ofert",
+    sortManual: "Per defecte",
+    sortPriceAsc: "Preu baix → alt",
+    sortPriceDesc: "Preu alt → baix",
+    offer: "Oferir",
+    contribute: "Contribuir",
   },
   en: {
     title: "Baby Registry",
-    subtitle: "Choose a gift and contribute to an item.",
+    subtitle: "Choose a gift or contribute to an item.",
     empty: "There are currently no open items on the baby registry.",
     loading: "Loading…",
     total: "Total",
     target: "Target",
     confirmed: "confirmed",
     reported: "reported",
-    alreadyBought: "Already bought",
+    alreadyOffered: "Already offered",
     full: "Fully funded",
     available: "Available",
     noTarget: "No target amount set",
     ofGoal: "of goal",
     darkConfirmed: "dark = confirmed",
+    filters: "Filters",
+    status: "Status",
+    sort: "Sort",
+    statusAll: "All",
+    statusAvailable: "Available",
+    statusOffered: "Already offered",
+    sortManual: "Default",
+    sortPriceAsc: "Price low → high",
+    sortPriceDesc: "Price high → low",
+    offer: "Offer",
+    contribute: "Contribute",
   },
   es: {
     title: "Lista de nacimiento",
-    subtitle: "Elige un regalo y contribuye a un artículo.",
+    subtitle: "Elige un regalo o contribuye a un artículo.",
     empty: "Actualmente no hay artículos abiertos en la lista de nacimiento.",
     loading: "Cargando…",
     total: "Total",
     target: "Objetivo",
     confirmed: "confirmado",
     reported: "anunciado",
-    alreadyBought: "Ya comprado",
+    alreadyOffered: "Ya ofrecido",
     full: "Completo",
     available: "Disponible",
     noTarget: "No hay importe objetivo",
     ofGoal: "del objetivo",
     darkConfirmed: "oscuro = confirmado",
+    filters: "Filtros",
+    status: "Estado",
+    sort: "Ordenar",
+    statusAll: "Todos",
+    statusAvailable: "Disponible",
+    statusOffered: "Ya ofrecido",
+    sortManual: "Por defecto",
+    sortPriceAsc: "Precio bajo → alto",
+    sortPriceDesc: "Precio alto → bajo",
+    offer: "Ofrecer",
+    contribute: "Contribuir",
   },
 };
 
@@ -201,39 +258,31 @@ function normalizeCategory(category: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
-
     feeding: "feeding",
     food: "feeding",
-
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
-
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
-
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
-
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
-
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
-
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
-
     other: "other",
     overig: "other",
   };
@@ -260,6 +309,8 @@ export default function RegistryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("manual");
 
   useEffect(() => {
     let isMounted = true;
@@ -281,13 +332,11 @@ export default function RegistryPage() {
               .eq("lang", lang)
               .eq("is_active", true)
               .order("sort_order", { ascending: true }),
-            supabase
-              .from("item_totals")
-              .select("item_id,paid_cents,reported_cents"),
+            supabase.from("item_totals").select("item_id,paid_cents,reported_cents"),
           ]);
 
         if (e1) throw e1;
-        if (e2) throw new Error(`Kan totals niet laden: ${e2.message}`);
+        if (e2) throw new Error(`Could not load totals: ${e2.message}`);
 
         const list = ((itemsData ?? []) as Item[]).filter(
           (row) => row.slug && row.title
@@ -308,7 +357,7 @@ export default function RegistryPage() {
         setTotals(map);
       } catch (err) {
         if (!isMounted) return;
-        setError(err instanceof Error ? err.message : "Onbekende fout");
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         if (!isMounted) return;
         setLoading(false);
@@ -331,12 +380,12 @@ export default function RegistryPage() {
 
       const totalProgress = target > 0 ? clamp01(total / target) : 0;
       const paidProgress = target > 0 ? clamp01(paid / target) : 0;
-
       const pct = Math.round(totalProgress * 100);
-      const reached = target > 0 && total >= target;
-      const disabled = it.already_owned || reached;
+      const reached = it.is_contribution_item && target > 0 && total >= target;
+      const unavailable = it.already_owned || reached;
       const categoryKey = normalizeCategory(it.category);
       const categoryLabel = getCategoryLabel(lang, it.category);
+      const displayPrice = it.target_cents ?? 0;
 
       return {
         it,
@@ -348,9 +397,10 @@ export default function RegistryPage() {
         paidProgress,
         pct,
         reached,
-        disabled,
+        unavailable,
         categoryKey,
         categoryLabel,
+        displayPrice,
       };
     });
   }, [items, totals, lang]);
@@ -366,12 +416,30 @@ export default function RegistryPage() {
   }, [cards]);
 
   const visibleCards = useMemo(() => {
-    if (selectedCategory === "all") {
-      return cards;
+    let list = [...cards];
+
+    if (selectedCategory !== "all") {
+      list = list.filter((card) => card.categoryKey === selectedCategory);
     }
 
-    return cards.filter((card) => card.categoryKey === selectedCategory);
-  }, [cards, selectedCategory]);
+    if (statusFilter === "available") {
+      list = list.filter((card) => !card.unavailable);
+    } else if (statusFilter === "offered") {
+      list = list.filter((card) => card.unavailable);
+    }
+
+    if (sortOption === "price_asc") {
+      list.sort((a, b) => a.displayPrice - b.displayPrice);
+    } else if (sortOption === "price_desc") {
+      list.sort((a, b) => b.displayPrice - a.displayPrice);
+    } else {
+      list.sort(
+        (a, b) => Number(a.it.sort_order ?? 0) - Number(b.it.sort_order ?? 0)
+      );
+    }
+
+    return list;
+  }, [cards, selectedCategory, statusFilter, sortOption]);
 
   useEffect(() => {
     if (selectedCategory === "all") return;
@@ -393,16 +461,15 @@ export default function RegistryPage() {
   if (error) {
     return (
       <main className="min-h-screen bg-[#f8f6f2] px-6 py-8 text-red-600">
-        Fout: {error}
+        Error: {error}
       </main>
     );
   }
 
   return (
     <main className="min-h-screen bg-[#f8f6f2]">
-      <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-2xl text-[#5e6a50]">{t.title}</h1>
-
         <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
 
         {cards.length === 0 ? (
@@ -411,39 +478,70 @@ export default function RegistryPage() {
           </div>
         ) : (
           <>
-            <div className="relative mt-5">
-              <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory("all")}
-                  className={[
-                    "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
-                    selectedCategory === "all"
-                      ? "border-[#5e6a50] bg-[#5e6a50] text-white"
-                      : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
-                  ].join(" ")}
-                >
-                  {categoryLabels[lang].all}
-                </button>
-
-                {availableCategories.map((category) => (
+            <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
+              <div>
+                <div className="mb-2 text-sm text-[#7c8570]">{t.filters}</div>
+                <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <button
-                    key={category}
                     type="button"
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => setSelectedCategory("all")}
                     className={[
                       "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
-                      selectedCategory === category
+                      selectedCategory === "all"
                         ? "border-[#5e6a50] bg-[#5e6a50] text-white"
                         : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
                     ].join(" ")}
                   >
-                    {categoryLabels[lang][category] ?? categoryLabels[lang].other}
+                    {categoryLabels[lang].all}
                   </button>
-                ))}
+
+                  {availableCategories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setSelectedCategory(category)}
+                      className={[
+                        "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
+                        selectedCategory === category
+                          ? "border-[#5e6a50] bg-[#5e6a50] text-white"
+                          : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
+                      ].join(" ")}
+                    >
+                      {categoryLabels[lang][category] ?? categoryLabels[lang].other}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#f8f6f2] to-transparent" />
+              <div>
+                <label className="mb-2 block text-sm text-[#7c8570]">
+                  {t.status}
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                  className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-2.5 text-sm text-[#5e6a50] outline-none focus:border-[#5e6a50]"
+                >
+                  <option value="all">{t.statusAll}</option>
+                  <option value="available">{t.statusAvailable}</option>
+                  <option value="offered">{t.statusOffered}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm text-[#7c8570]">
+                  {t.sort}
+                </label>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as SortOption)}
+                  className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-2.5 text-sm text-[#5e6a50] outline-none focus:border-[#5e6a50]"
+                >
+                  <option value="manual">{t.sortManual}</option>
+                  <option value="price_asc">{t.sortPriceAsc}</option>
+                  <option value="price_desc">{t.sortPriceDesc}</option>
+                </select>
+              </div>
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -458,119 +556,136 @@ export default function RegistryPage() {
                   paidProgress,
                   pct,
                   reached,
-                  disabled,
+                  unavailable,
                   categoryLabel,
-                }) => (
-                  <button
-                    key={it.id}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => {
-                      if (!disabled) {
-                        router.push(`/${lang}/item/${it.slug}`);
-                      }
-                    }}
-                    className={[
-                      "rounded-2xl border border-[#d8ddd1] bg-white p-4 text-left shadow-sm transition",
-                      disabled
-                        ? "cursor-not-allowed opacity-60"
-                        : "hover:-translate-y-0.5 hover:shadow-md",
-                    ].join(" ")}
-                  >
-                    {it.image_url ? (
-                      <div className="rounded-xl bg-[#f8f6f2] p-3">
-                        <img
-                          src={it.image_url}
-                          alt={it.title}
-                          className="h-44 w-full rounded-lg object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
-                        No image
-                      </div>
-                    )}
+                }) => {
+                  const statusText = it.already_owned
+                    ? t.alreadyOffered
+                    : reached
+                    ? t.full
+                    : t.available;
 
-                    <div className="mt-4 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="mb-2">
-                          <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
-                            {categoryLabel}
-                          </span>
+                  const statusClass = it.already_owned
+                    ? "bg-[#ecefe7] text-[#5e6a50]"
+                    : reached
+                    ? "bg-[#dfe7d7] text-[#4f5a44]"
+                    : "bg-[#f4efe3] text-[#8a7753]";
+
+                  const ctaText = it.is_contribution_item ? t.contribute : t.offer;
+
+                  return (
+                    <div
+                      key={it.id}
+                      className={[
+                        "rounded-2xl border border-[#d8ddd1] bg-white p-4 shadow-sm transition",
+                        unavailable ? "opacity-80" : "hover:-translate-y-0.5 hover:shadow-md",
+                      ].join(" ")}
+                    >
+                      {it.image_url ? (
+                        <div className="rounded-xl bg-[#f8f6f2] p-3">
+                          <img
+                            src={it.image_url}
+                            alt={it.title}
+                            className="h-44 w-full rounded-lg object-contain"
+                          />
                         </div>
-
-                        <div className="text-base text-[#5e6a50]">{it.title}</div>
-
-                        {it.description ? (
-                          <div className="mt-1 line-clamp-2 text-sm text-[#7c8570]">
-                            {it.description}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      {it.already_owned ? (
-                        <span className="shrink-0 rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
-                          {t.alreadyBought}
-                        </span>
-                      ) : reached ? (
-                        <span className="shrink-0 rounded-full bg-[#dfe7d7] px-3 py-1 text-xs text-[#4f5a44]">
-                          {t.full}
-                        </span>
                       ) : (
-                        <span className="shrink-0 rounded-full bg-[#f4efe3] px-3 py-1 text-xs text-[#8a7753]">
-                          {t.available}
-                        </span>
+                        <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
+                          No image
+                        </div>
                       )}
-                    </div>
 
-                    <div className="mt-4">
-                      <div className="flex items-start justify-between gap-4 text-sm">
-                        <div className="text-[#7c8570]">
-                          <div>
-                            {t.total}:{" "}
-                            <span className="text-[#5e6a50]">
-                              {euro(total, lang)}
+                      <div className="mt-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="mb-2">
+                            <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                              {categoryLabel}
                             </span>
                           </div>
 
-                          <div className="mt-1 text-xs text-[#9ba292]">
-                            {euro(paid, lang)} {t.confirmed}
-                            {reported > 0
-                              ? ` · ${euro(reported, lang)} ${t.reported}`
-                              : ""}
-                          </div>
+                          <div className="text-base text-[#5e6a50]">{it.title}</div>
+
+                          {it.description ? (
+                            <div className="mt-1 line-clamp-2 text-sm text-[#7c8570]">
+                              {it.description}
+                            </div>
+                          ) : null}
                         </div>
 
-                        <div className="text-right text-[#7c8570]">
-                          <div>
-                            {t.target}:{" "}
-                            <span className="text-[#5e6a50]">
-                              {target > 0 ? euro(target, lang) : "—"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
-                        <div
-                          className="h-2 bg-[#cfd5c7]"
-                          style={{ width: `${Math.round(totalProgress * 100)}%` }}
-                        />
-                        <div
-                          className="-mt-2 h-2 bg-[#5e6a50]"
-                          style={{ width: `${Math.round(paidProgress * 100)}%` }}
-                        />
-                      </div>
-
-                      <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
-                        <span>
-                          {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
+                        <span className={`shrink-0 rounded-full px-3 py-1 text-xs ${statusClass}`}>
+                          {statusText}
                         </span>
-                        <span>{t.darkConfirmed}</span>
+                      </div>
+
+                      {it.is_contribution_item ? (
+                        <div className="mt-4">
+                          <div className="flex items-start justify-between gap-4 text-sm">
+                            <div className="text-[#7c8570]">
+                              <div>
+                                {t.total}:{" "}
+                                <span className="text-[#5e6a50]">{euro(total, lang)}</span>
+                              </div>
+
+                              <div className="mt-1 text-xs text-[#9ba292]">
+                                {euro(paid, lang)} {t.confirmed}
+                                {reported > 0
+                                  ? ` · ${euro(reported, lang)} ${t.reported}`
+                                  : ""}
+                              </div>
+                            </div>
+
+                            <div className="text-right text-[#7c8570]">
+                              <div>
+                                {t.target}:{" "}
+                                <span className="text-[#5e6a50]">
+                                  {target > 0 ? euro(target, lang) : "—"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
+                            <div
+                              className="h-2 bg-[#cfd5c7]"
+                              style={{ width: `${Math.round(totalProgress * 100)}%` }}
+                            />
+                            <div
+                              className="-mt-2 h-2 bg-[#5e6a50]"
+                              style={{ width: `${Math.round(paidProgress * 100)}%` }}
+                            />
+                          </div>
+
+                          <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
+                            <span>
+                              {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
+                            </span>
+                            <span>{t.darkConfirmed}</span>
+                          </div>
+                        </div>
+                      ) : it.target_cents ? (
+                        <div className="mt-4 text-sm text-[#7c8570]">
+                          {t.target}:{" "}
+                          <span className="text-[#5e6a50]">{euro(it.target_cents, lang)}</span>
+                        </div>
+                      ) : null}
+
+                      <div className="mt-5">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/${lang}/item/${it.slug}`)}
+                          className={[
+                            "w-full rounded-2xl px-4 py-3 text-sm transition",
+                            unavailable
+                              ? "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]"
+                              : "bg-[#5e6a50] text-white hover:opacity-90",
+                          ].join(" ")}
+                        >
+                          {unavailable ? t.statusOffered : ctaText}
+                        </button>
                       </div>
                     </div>
-                  </button>
-                )
+                  );
+                }
               )}
             </div>
           </>

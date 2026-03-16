@@ -44,6 +44,7 @@ const uiText: Record<
   Lang,
   {
     back: string;
+    backToList: string;
     loading: string;
     notFound: string;
     contributeTitle: string;
@@ -65,6 +66,7 @@ const uiText: Record<
 > = {
   nl: {
     back: "← Terug naar item",
+    backToList: "← Terug naar lijst",
     loading: "Laden…",
     notFound: "Item niet gevonden.",
     contributeTitle: "Bijdragen aan dit item",
@@ -85,6 +87,7 @@ const uiText: Record<
   },
   ca: {
     back: "← Tornar a l’article",
+    backToList: "← Tornar a la llista",
     loading: "Carregant…",
     notFound: "Article no trobat.",
     contributeTitle: "Contribuir a aquest article",
@@ -105,6 +108,7 @@ const uiText: Record<
   },
   en: {
     back: "← Back to item",
+    backToList: "← Back to list",
     loading: "Loading…",
     notFound: "Item not found.",
     contributeTitle: "Contribute to this item",
@@ -125,6 +129,7 @@ const uiText: Record<
   },
   es: {
     back: "← Volver al artículo",
+    backToList: "← Volver a la lista",
     loading: "Cargando…",
     notFound: "Artículo no encontrado.",
     contributeTitle: "Contribuir a este artículo",
@@ -176,7 +181,6 @@ export default function ContributePage() {
     : "nl";
   const slug = params.slug;
   const t = uiText[lang];
-  const formRef = React.useRef<HTMLFormElement | null>(null);
 
   const [item, setItem] = useState<ItemView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -187,13 +191,6 @@ export default function ContributePage() {
   const [message, setMessage] = useState("");
   const [amountEuros, setAmountEuros] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  function scrollToForm() {
-    formRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
 
   useEffect(() => {
     let active = true;
@@ -227,7 +224,6 @@ export default function ContributePage() {
         }
 
         const row = itemData as ItemViewRow;
-
         const totalsRow = ((totalsData ?? []) as TotalsRow[]).find(
           (entry) => entry.item_id === row.id
         );
@@ -314,19 +310,19 @@ export default function ContributePage() {
       const json = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(json?.error ?? "Kon bijdrage niet aanmaken.");
+        throw new Error(json?.error ?? "Could not create contribution.");
       }
 
       const contributionId = json?.id;
       const token = json?.token;
 
       if (!contributionId || !token) {
-        throw new Error("Onvolledig antwoord van server.");
+        throw new Error("Incomplete response from server.");
       }
 
       router.push(`/${lang}/pay/${contributionId}?t=${encodeURIComponent(token)}`);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Onbekende fout");
+      window.alert(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSubmitting(false);
     }
@@ -359,13 +355,22 @@ export default function ContributePage() {
   if (!item.is_contribution_item || item.already_owned) {
     return (
       <main className="min-h-screen bg-[#f8f6f2] px-4 py-8 text-[#5e6a50]">
-        <button
-          type="button"
-          onClick={() => router.push(`/${lang}/item/${item.slug}`)}
-          className="mb-6 text-sm text-[#5e6a50]"
-        >
-          {t.back}
-        </button>
+        <div className="mb-6 flex flex-wrap gap-4 text-sm">
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}`)}
+            className="text-[#5e6a50]"
+          >
+            {t.backToList}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}/item/${item.slug}`)}
+            className="text-[#5e6a50]"
+          >
+            {t.back}
+          </button>
+        </div>
 
         <div className="rounded-2xl border border-[#d8ddd1] bg-white p-6 shadow-sm">
           {t.unavailable}
@@ -377,13 +382,22 @@ export default function ContributePage() {
   return (
     <main className="min-h-screen bg-[#f8f6f2]">
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <button
-          type="button"
-          onClick={() => router.push(`/${lang}/item/${item.slug}`)}
-          className="mb-6 text-sm text-[#5e6a50] transition hover:opacity-80"
-        >
-          {t.back}
-        </button>
+        <div className="mb-6 flex flex-wrap gap-4 text-sm">
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}`)}
+            className="text-[#5e6a50] transition hover:opacity-80"
+          >
+            {t.backToList}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}/item/${item.slug}`)}
+            className="text-[#5e6a50] transition hover:opacity-80"
+          >
+            {t.back}
+          </button>
+        </div>
 
         <div className="rounded-3xl border border-[#d8ddd1] bg-white p-5 shadow-sm">
           {item.image_url ? (
@@ -408,23 +422,27 @@ export default function ContributePage() {
             </p>
           ) : null}
 
-          {item.target_cents ? (
-            <>
-              <div className="mt-6 flex items-center justify-between text-sm text-[#7c8570]">
-                <span>{euro(item.paid_cents + item.reported_cents, lang)}</span>
-                <span>{euro(item.target_cents, lang)}</span>
-              </div>
+          <div className="mt-6">
+            <div className="flex items-center justify-between text-sm text-[#7c8570]">
+              <span>{euro(item.paid_cents + item.reported_cents, lang)}</span>
+              <span>{item.target_cents ? euro(item.target_cents, lang) : "—"}</span>
+            </div>
 
-              <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
-                <div
-                  className="h-3 bg-[#5e6a50]"
-                  style={{ width: `${Math.round(progress * 100)}%` }}
-                />
-              </div>
-            </>
-          ) : null}
+            <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
+              <div
+                className="h-3 bg-[#5e6a50]"
+                style={{ width: `${Math.round(progress * 100)}%` }}
+              />
+            </div>
 
-          <form ref={formRef} onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {remaining !== null ? (
+              <p className="mt-2 text-sm text-[#7c8570]">
+                {t.remaining}: {euro(remaining, lang)}
+              </p>
+            ) : null}
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
               <label className="mb-2 block text-sm text-[#5e6a50]">
                 {t.name}
@@ -474,10 +492,7 @@ export default function ContributePage() {
                       <button
                         key={value}
                         type="button"
-                        onClick={() => {
-                          setAmountEuros(String(value));
-                          scrollToForm();
-                        }}
+                        onClick={() => setAmountEuros(String(value))}
                         className="rounded-full border border-[#d8ddd1] px-4 py-2 text-sm text-[#5e6a50] transition hover:bg-[#f3f1eb]"
                       >
                         €{value}
@@ -490,12 +505,11 @@ export default function ContributePage() {
                   !suggestionEuros.includes(Math.round(remaining / 100)) ? (
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={() =>
                         setAmountEuros(
                           ((remaining || 0) / 100).toFixed(2).replace(".", ",")
-                        );
-                        scrollToForm();
-                      }}
+                        )
+                      }
                       className="rounded-full border border-[#5e6a50] px-4 py-2 text-sm text-[#5e6a50] transition hover:bg-[#f3f1eb]"
                     >
                       {euro(remaining, lang)}
@@ -513,12 +527,6 @@ export default function ContributePage() {
                 required
                 className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-[#5e6a50] outline-none focus:border-[#5e6a50]"
               />
-
-              {remaining !== null ? (
-                <p className="mt-2 text-xs text-[#7c8570]">
-                  {t.remaining}: {euro(remaining, lang)}
-                </p>
-              ) : null}
             </div>
 
             <div>

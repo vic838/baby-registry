@@ -40,7 +40,7 @@ export default function LandingPage() {
             </div>
 
             <div className="pb-3 text-center text-xs text-[#5e6a50]">
-              Tik om verder te gaan
+              Continue
             </div>
           </>
         ) : (
@@ -51,7 +51,7 @@ export default function LandingPage() {
                 onClick={() => setShowLanguageMenu(false)}
                 className="text-sm text-[#5e6a50] transition hover:opacity-80"
               >
-                ← Terug
+                ← Back
               </button>
             </div>
 

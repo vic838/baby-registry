@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 type Lang = "nl" | "ca" | "en" | "es";
+type StatusFilter = "all" | "available" | "offered";
+type SortOption = "manual" | "price_asc" | "price_desc";
 
 type TotalsRow = {
   item_id: string;
@@ -45,6 +47,7 @@ type UiItem = {
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
+    all: "Alle",
     sleeping: "Slapen",
     feeding: "Voeding",
     care: "Verzorging",
@@ -56,6 +59,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Overig",
   },
   ca: {
+    all: "Tots",
     sleeping: "Dormir",
     feeding: "Alimentació",
     care: "Cura",
@@ -67,6 +71,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Altres",
   },
   en: {
+    all: "All",
     sleeping: "Sleeping",
     feeding: "Feeding",
     care: "Care",
@@ -78,6 +83,7 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     other: "Other",
   },
   es: {
+    all: "Todos",
     sleeping: "Dormir",
     feeding: "Alimentación",
     care: "Cuidado",
@@ -94,74 +100,134 @@ const uiText: Record<
   Lang,
   {
     pageTitle: string;
-    contribute: string;
-    viewDetails: string;
-    alreadyGifted: string;
-    funded: string;
-    reported: string;
-    chooseLanguage: string;
-    contributionItem: string;
-    giftItem: string;
     loading: string;
-    close: string;
     empty: string;
+    chooseLanguage: string;
+    total: string;
+    target: string;
+    confirmed: string;
+    reported: string;
+    available: string;
+    alreadyOffered: string;
+    full: string;
+    noTarget: string;
+    ofGoal: string;
+    filters: string;
+    status: string;
+    sort: string;
+    statusAll: string;
+    statusAvailable: string;
+    statusOffered: string;
+    sortManual: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+    offer: string;
+    contribute: string;
   }
 > = {
   nl: {
     pageTitle: "Geboortelijst",
-    contribute: "Bijdragen",
-    viewDetails: "Bekijk item",
-    alreadyGifted: "Reeds voorzien",
-    funded: "Bevestigd",
-    reported: "Aangekondigd",
-    chooseLanguage: "Taal",
-    contributionItem: "Bijdrage-item",
-    giftItem: "Cadeau-item",
     loading: "Laden...",
-    close: "Sluiten",
     empty: "Er zijn momenteel geen items beschikbaar.",
+    chooseLanguage: "Taal",
+    total: "Totaal",
+    target: "Doel",
+    confirmed: "Bevestigd",
+    reported: "Aangekondigd",
+    available: "Beschikbaar",
+    alreadyOffered: "Al aangeboden",
+    full: "Volzet",
+    noTarget: "Geen doelbedrag",
+    ofGoal: "van doel",
+    filters: "Filters",
+    status: "Status",
+    sort: "Sortering",
+    statusAll: "Alles",
+    statusAvailable: "Beschikbaar",
+    statusOffered: "Al aangeboden",
+    sortManual: "Standaard",
+    sortPriceAsc: "Prijs laag → hoog",
+    sortPriceDesc: "Prijs hoog → laag",
+    offer: "Aanbieden",
+    contribute: "Bijdragen",
   },
   ca: {
     pageTitle: "Llista de naixement",
-    contribute: "Contribuir",
-    viewDetails: "Veure article",
-    alreadyGifted: "Ja previst",
-    funded: "Confirmat",
-    reported: "Anunciat",
-    chooseLanguage: "Idioma",
-    contributionItem: "Article de contribució",
-    giftItem: "Article regal",
     loading: "Carregant...",
-    close: "Tancar",
     empty: "Actualment no hi ha articles disponibles.",
+    chooseLanguage: "Idioma",
+    total: "Total",
+    target: "Objectiu",
+    confirmed: "Confirmat",
+    reported: "Anunciat",
+    available: "Disponible",
+    alreadyOffered: "Ja ofert",
+    full: "Complet",
+    noTarget: "Sense import objectiu",
+    ofGoal: "de l’objectiu",
+    filters: "Filtres",
+    status: "Estat",
+    sort: "Ordenació",
+    statusAll: "Tots",
+    statusAvailable: "Disponible",
+    statusOffered: "Ja ofert",
+    sortManual: "Per defecte",
+    sortPriceAsc: "Preu baix → alt",
+    sortPriceDesc: "Preu alt → baix",
+    offer: "Oferir",
+    contribute: "Contribuir",
   },
   en: {
     pageTitle: "Baby Registry",
-    contribute: "Contribute",
-    viewDetails: "View item",
-    alreadyGifted: "Already covered",
-    funded: "Funded",
-    reported: "Reported",
-    chooseLanguage: "Language",
-    contributionItem: "Contribution item",
-    giftItem: "Gift item",
     loading: "Loading...",
-    close: "Close",
     empty: "There are currently no items available.",
+    chooseLanguage: "Language",
+    total: "Total",
+    target: "Target",
+    confirmed: "Confirmed",
+    reported: "Reported",
+    available: "Available",
+    alreadyOffered: "Already offered",
+    full: "Fully funded",
+    noTarget: "No target amount",
+    ofGoal: "of goal",
+    filters: "Filters",
+    status: "Status",
+    sort: "Sort",
+    statusAll: "All",
+    statusAvailable: "Available",
+    statusOffered: "Already offered",
+    sortManual: "Default",
+    sortPriceAsc: "Price low → high",
+    sortPriceDesc: "Price high → low",
+    offer: "Offer",
+    contribute: "Contribute",
   },
   es: {
     pageTitle: "Lista de nacimiento",
-    contribute: "Contribuir",
-    viewDetails: "Ver artículo",
-    alreadyGifted: "Ya previsto",
-    funded: "Financiado",
-    reported: "Anunciado",
-    chooseLanguage: "Idioma",
-    contributionItem: "Artículo de contribución",
-    giftItem: "Artículo regalo",
     loading: "Cargando...",
-    close: "Cerrar",
     empty: "Actualmente no hay artículos disponibles.",
+    chooseLanguage: "Idioma",
+    total: "Total",
+    target: "Objetivo",
+    confirmed: "Confirmado",
+    reported: "Anunciado",
+    available: "Disponible",
+    alreadyOffered: "Ya ofrecido",
+    full: "Completo",
+    noTarget: "Sin importe objetivo",
+    ofGoal: "del objetivo",
+    filters: "Filtros",
+    status: "Estado",
+    sort: "Ordenar",
+    statusAll: "Todos",
+    statusAvailable: "Disponible",
+    statusOffered: "Ya ofrecido",
+    sortManual: "Por defecto",
+    sortPriceAsc: "Precio bajo → alto",
+    sortPriceDesc: "Precio alto → bajo",
+    offer: "Ofrecer",
+    contribute: "Contribuir",
   },
 };
 
@@ -174,13 +240,7 @@ const languageOptions: { code: Lang; label: string }[] = [
 
 function euro(cents: number, lang: Lang) {
   const locale =
-    lang === "nl"
-      ? "nl-BE"
-      : lang === "ca"
-      ? "ca-ES"
-      : lang === "es"
-      ? "es-ES"
-      : "en-GB";
+    lang === "nl" ? "nl-BE" : lang === "ca" ? "ca-ES" : lang === "es" ? "es-ES" : "en-GB";
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -199,39 +259,31 @@ function normalizeCategory(value: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
-
     feeding: "feeding",
     food: "feeding",
-
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
-
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
-
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
-
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
-
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
-
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
-
     other: "other",
     overig: "other",
   };
@@ -249,7 +301,11 @@ export default function RegistryPage() {
 
   const [items, setItems] = useState<UiItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<UiItem | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("manual");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const t = uiText[lang];
 
   useEffect(() => {
     let cancelled = false;
@@ -270,17 +326,8 @@ export default function RegistryPage() {
           supabase.from("item_totals").select("item_id,paid_cents,reported_cents"),
         ]);
 
-      if (viewError) {
-        console.error(viewError);
-        if (!cancelled) {
-          setItems([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      if (totalsError) {
-        console.error(totalsError);
+      if (viewError || totalsError) {
+        console.error(viewError || totalsError);
         if (!cancelled) {
           setItems([]);
           setLoading(false);
@@ -331,37 +378,67 @@ export default function RegistryPage() {
     };
   }, [lang]);
 
-  const groupedItems = useMemo(() => {
-    const groups = new Map<string, UiItem[]>();
+  const cards = useMemo(() => {
+    return items.map((item) => {
+      const total = item.paid_cents + item.reported_cents;
+      const target = item.target_cents ?? 0;
+      const reached = item.is_contribution_item && target > 0 && total >= target;
+      const unavailable = item.already_owned || reached;
+      const progress = target > 0 ? clamp01(total / target) : 0;
+      const paidProgress = target > 0 ? clamp01(item.paid_cents / target) : 0;
+      const categoryKey = normalizeCategory(item.category);
 
-    for (const item of items) {
-      const key = normalizeCategory(item.category);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(item);
-    }
-
-    return Array.from(groups.entries())
-      .map(([key, groupItems]) => ({
-        key,
-        label: categoryLabels[lang][key] ?? categoryLabels[lang].other,
-        items: groupItems.sort((a, b) => a.sort_order - b.sort_order),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      return {
+        ...item,
+        total,
+        target,
+        reached,
+        unavailable,
+        progress,
+        paidProgress,
+        pct: Math.round(progress * 100),
+        categoryKey,
+        categoryLabel: categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other,
+        displayPrice: item.target_cents ?? 0,
+      };
+    });
   }, [items, lang]);
 
-  const t = uiText[lang];
+  const availableCategories = useMemo(() => {
+    const categories = Array.from(new Set(cards.map((c) => c.categoryKey)));
+    const preferred = ["essentials", "sleeping", "feeding", "care", "travel", "room", "clothes", "toys", "other"];
+    return preferred.filter((c) => categories.includes(c));
+  }, [cards]);
 
-  function goToItem(item: UiItem) {
-    router.push(`/${lang}/item/${item.slug}`);
-  }
+  const visibleCards = useMemo(() => {
+    let result = [...cards];
+
+    if (selectedCategory !== "all") {
+      result = result.filter((card) => card.categoryKey === selectedCategory);
+    }
+
+    if (statusFilter === "available") {
+      result = result.filter((card) => !card.unavailable);
+    } else if (statusFilter === "offered") {
+      result = result.filter((card) => card.unavailable);
+    }
+
+    if (sortOption === "price_asc") {
+      result.sort((a, b) => a.displayPrice - b.displayPrice);
+    } else if (sortOption === "price_desc") {
+      result.sort((a, b) => b.displayPrice - a.displayPrice);
+    } else {
+      result.sort((a, b) => a.sort_order - b.sort_order);
+    }
+
+    return result;
+  }, [cards, selectedCategory, statusFilter, sortOption]);
 
   return (
-    <main className="min-h-screen bg-[#f8f6f2] pb-28">
-      <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
+    <main className="min-h-screen bg-[#f8f6f2] pb-16">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl text-[#5e6a50]">{t.pageTitle}</h1>
-          </div>
+          <h1 className="text-3xl text-[#5e6a50]">{t.pageTitle}</h1>
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-[#7c8570]">{t.chooseLanguage}</span>
@@ -392,191 +469,183 @@ export default function RegistryPage() {
           <div className="rounded-2xl bg-white p-6 text-[#5e6a50] shadow-sm ring-1 ring-[#d8ddd1]">
             {t.loading}
           </div>
-        ) : groupedItems.length === 0 ? (
+        ) : cards.length === 0 ? (
           <div className="rounded-2xl bg-white p-6 text-[#5e6a50] shadow-sm ring-1 ring-[#d8ddd1]">
             {t.empty}
           </div>
         ) : (
-          <div className="space-y-10">
-            {groupedItems.map((group) => (
-              <section key={group.key}>
-                <h2 className="mb-4 text-xl text-[#5e6a50]">{group.label}</h2>
+          <>
+            <div className="mb-6 grid gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#d8ddd1] md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm text-[#7c8570]">Categorie</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-sm text-[#5e6a50] outline-none focus:border-[#5e6a50]"
+                >
+                  <option value="all">{categoryLabels[lang].all}</option>
+                  {availableCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {categoryLabels[lang][category] ?? categoryLabels[lang].other}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {group.items.map((item) => {
-                    const funded = item.paid_cents;
-                    const reported = item.reported_cents;
-                    const target = item.target_cents ?? 0;
-                    const progress =
-                      target > 0 ? clamp01((funded + reported) / target) : 0;
+              <div>
+                <label className="mb-2 block text-sm text-[#7c8570]">{t.status}</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                  className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-sm text-[#5e6a50] outline-none focus:border-[#5e6a50]"
+                >
+                  <option value="all">{t.statusAll}</option>
+                  <option value="available">{t.statusAvailable}</option>
+                  <option value="offered">{t.statusOffered}</option>
+                </select>
+              </div>
 
-                    return (
-                      <article
-                        key={item.id}
-                        className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#d8ddd1]"
-                      >
-                        <div className="relative aspect-[4/3] bg-[#f3f1eb]">
-                          {item.image_url ? (
-                            <Image
-                              src={item.image_url}
-                              alt={item.title}
-                              fill
-                              className="object-contain p-3"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-[#8d9484]">
-                              No image
-                            </div>
-                          )}
+              <div>
+                <label className="mb-2 block text-sm text-[#7c8570]">{t.sort}</label>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as SortOption)}
+                  className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-sm text-[#5e6a50] outline-none focus:border-[#5e6a50]"
+                >
+                  <option value="manual">{t.sortManual}</option>
+                  <option value="price_asc">{t.sortPriceAsc}</option>
+                  <option value="price_desc">{t.sortPriceDesc}</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleCards.map((item) => {
+                const statusText = item.already_owned
+                  ? t.alreadyOffered
+                  : item.reached
+                  ? t.full
+                  : t.available;
+
+                const statusClass = item.already_owned
+                  ? "bg-[#ecefe7] text-[#5e6a50]"
+                  : item.reached
+                  ? "bg-[#dfe7d7] text-[#4f5a44]"
+                  : "bg-[#f4efe3] text-[#8a7753]";
+
+                const ctaText = item.is_contribution_item ? t.contribute : t.offer;
+
+                return (
+                  <article
+                    key={item.id}
+                    className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#d8ddd1]"
+                  >
+                    <div className="relative aspect-[4/3] bg-[#f3f1eb]">
+                      {item.image_url ? (
+                        <Image
+                          src={item.image_url}
+                          alt={item.title}
+                          fill
+                          className="object-contain p-3"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-[#8d9484]">
+                          No image
                         </div>
+                      )}
+                    </div>
 
-                        <div className="p-5">
-                          <div className="mb-2 flex items-start justify-between gap-3">
-                            <h3 className="text-lg text-[#5e6a50]">
-                              {item.title}
-                            </h3>
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <h3 className="text-lg text-[#5e6a50]">{item.title}</h3>
 
-                            <span className="rounded-full bg-[#ecefe7] px-2.5 py-1 text-xs text-[#5e6a50]">
-                              {item.is_contribution_item
-                                ? t.contributionItem
-                                : t.giftItem}
-                            </span>
-                          </div>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${statusClass}`}>
+                          {statusText}
+                        </span>
+                      </div>
 
-                          {item.description ? (
-                            <p className="mb-4 text-sm leading-6 text-[#7c8570]">
-                              {item.description}
-                            </p>
-                          ) : null}
+                      <div className="mb-3">
+                        <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                          {item.categoryLabel}
+                        </span>
+                      </div>
 
-                          {item.already_owned ? (
-                            <div className="mb-4 rounded-2xl bg-[#ecefe7] px-3 py-2 text-sm text-[#5e6a50]">
-                              {t.alreadyGifted}
+                      {item.description ? (
+                        <p className="mb-4 text-sm leading-6 text-[#7c8570]">
+                          {item.description}
+                        </p>
+                      ) : null}
+
+                      <div className="mt-auto">
+                        {item.is_contribution_item ? (
+                          <div className="mb-5">
+                            <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
+                              <span>{euro(item.total, lang)}</span>
+                              <span>{euro(item.target, lang)}</span>
                             </div>
-                          ) : null}
 
-                          {item.is_contribution_item && item.target_cents ? (
-                            <div className="mb-5">
-                              <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
-                                <span>{euro(funded + reported, lang)}</span>
-                                <span>{euro(item.target_cents, lang)}</span>
-                              </div>
-
-                              <div className="h-2.5 overflow-hidden rounded-full bg-[#e8ebe3]">
-                                <div
-                                  className="h-full rounded-full bg-[#5e6a50] transition-all"
-                                  style={{ width: `${progress * 100}%` }}
-                                />
-                              </div>
-
-                              <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
-                                <span>
-                                  {t.funded}: {euro(funded, lang)}
-                                </span>
-                                <span>
-                                  {t.reported}: {euro(reported, lang)}
-                                </span>
-                              </div>
+                            <div className="h-2.5 overflow-hidden rounded-full bg-[#e8ebe3]">
+                              <div
+                                className="h-full rounded-full bg-[#cfd5c7]"
+                                style={{ width: `${item.pct}%` }}
+                              />
+                              <div
+                                className="-mt-2.5 h-full rounded-full bg-[#5e6a50]"
+                                style={{ width: `${Math.round(item.paidProgress * 100)}%` }}
+                              />
                             </div>
-                          ) : null}
 
-                          <div className="flex gap-3">
-                            {item.is_contribution_item && !item.already_owned ? (
-                              <button
-                                type="button"
-                                onClick={() => goToItem(item)}
-                                className="flex-1 rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white transition hover:opacity-90"
-                              >
-                                {t.contribute}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => goToItem(item)}
-                                className="flex-1 rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
-                              >
-                                {t.viewDetails}
-                              </button>
-                            )}
-
-                            {!item.is_contribution_item ? (
-                              <button
-                                type="button"
-                                onClick={() => goToItem(item)}
-                                className="rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
-                              >
-                                +
-                              </button>
-                            ) : null}
+                            <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
+                              <span>
+                                {t.confirmed}: {euro(item.paid_cents, lang)}
+                              </span>
+                              <span>
+                                {t.reported}: {euro(item.reported_cents, lang)}
+                              </span>
+                            </div>
                           </div>
+                        ) : item.target_cents ? (
+                          <div className="mb-5 text-sm text-[#7c8570]">
+                            {t.target}:{" "}
+                            <span className="text-[#5e6a50]">{euro(item.target_cents, lang)}</span>
+                          </div>
+                        ) : (
+                          <div className="mb-5" />
+                        )}
+
+                        <div className="mt-auto flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/${lang}/item/${item.slug}`)}
+                            className={[
+                              "flex-1 rounded-2xl px-4 py-3 text-sm transition",
+                              item.unavailable
+                                ? "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]"
+                                : "bg-[#5e6a50] text-white hover:opacity-90",
+                            ].join(" ")}
+                          >
+                            {item.unavailable ? statusText : ctaText}
+                          </button>
+
+                          {!item.is_contribution_item ? (
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/${lang}/item/${item.slug}`)}
+                              className="rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
+                            >
+                              +
+                            </button>
+                          ) : null}
                         </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
-
-      {selectedItem ? (
-        <div className="fixed inset-0 z-40 flex items-end bg-black/40 p-4 md:items-center md:justify-center">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <h3 className="mb-3 text-xl text-[#5e6a50]">
-              {selectedItem.title}
-            </h3>
-
-            {selectedItem.description ? (
-              <p className="mb-4 text-sm leading-6 text-[#7c8570]">
-                {selectedItem.description}
-              </p>
-            ) : null}
-
-            {selectedItem.is_contribution_item && selectedItem.target_cents ? (
-              <p className="mb-6 text-sm text-[#7c8570]">
-                {euro(
-                  selectedItem.paid_cents + selectedItem.reported_cents,
-                  lang
-                )}{" "}
-                / {euro(selectedItem.target_cents, lang)}
-              </p>
-            ) : null}
-
-            <div className="flex gap-3">
-              {selectedItem.is_contribution_item && !selectedItem.already_owned ? (
-                <button
-                  type="button"
-                  onClick={() => goToItem(selectedItem)}
-                  className="flex-1 rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white"
-                >
-                  {t.contribute}
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => setSelectedItem(null)}
-                className="flex-1 rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50]"
-              >
-                {t.close}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {selectedItem && selectedItem.is_contribution_item && !selectedItem.already_owned ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#d8ddd1] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
-          <button
-            type="button"
-            onClick={() => goToItem(selectedItem)}
-            className="w-full rounded-2xl bg-[#5e6a50] px-4 py-3 text-sm text-white"
-          >
-            {t.contribute}
-          </button>
-        </div>
-      ) : null}
     </main>
   );
 }
