@@ -654,7 +654,7 @@ export default function RegistryPage() {
                     </div>
 
                     <div className="flex flex-1 flex-col p-5">
-                      <div className="mb-1 flex items-start justify-between gap-2">
+                      <div className="mb-0 flex items-start justify-between gap-2">
                         <h3 className="line-clamp-2 min-h-[3rem] text-lg leading-7 text-[#5e6a50]">
                           {item.title}
                         </h3>
@@ -666,7 +666,7 @@ export default function RegistryPage() {
                         </span>
                       </div>
 
-                      <div className="mb-2">
+                      <div className="mb-1 -mt-1">
                         <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
                           {item.categoryLabel}
                         </span>
