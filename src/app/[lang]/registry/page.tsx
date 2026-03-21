@@ -611,16 +611,28 @@ export default function RegistryPage() {
                       ].join(" ")}
                     >
                       {it.image_url ? (
-                        <div className="w-full overflow-hidden rounded-xl bg-[#f8f6f2] p-3">
-                          <img
-                            src={it.image_url}
-                            alt={it.title}
-                            className={[
-                              "h-44 w-full max-w-full rounded-lg object-contain transition",
-                              unavailable ? "grayscale opacity-70" : "",
-                            ].join(" ")}
-                          />
-                        </div>
+                        <div
+  onClick={() => {
+    if (!unavailable) {
+      router.push(`/${lang}/item/${it.slug}`);
+    }
+  }}
+  className={[
+    "w-full overflow-hidden rounded-xl bg-[#f8f6f2] p-3",
+    !unavailable ? "cursor-pointer" : "cursor-not-allowed",
+  ].join(" ")}
+>
+  <img
+    src={it.image_url}
+    alt={it.title}
+    className={[
+      "h-44 w-full max-w-full rounded-lg object-contain transition",
+      unavailable
+        ? "grayscale opacity-70"
+        : "hover:scale-[1.02] hover:opacity-90",
+    ].join(" ")}
+  />
+</div>
                       ) : (
                         <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
                           No image
