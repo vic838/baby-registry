@@ -654,8 +654,8 @@ export default function RegistryPage() {
                     </div>
 
                     <div className="flex flex-1 flex-col p-5">
-  <div className="mb-2 flex items-start justify-between gap-3">
-    <h3 className="line-clamp-2 min-h-[3.5rem] text-lg leading-7 text-[#5e6a50]">
+  <div className="mb-1 flex items-start justify-between gap-2">
+    <h3 className="line-clamp-2 min-h-[3rem] text-lg leading-7 text-[#5e6a50]">
       {item.title}
     </h3>
 
@@ -666,13 +666,13 @@ export default function RegistryPage() {
     </span>
   </div>
 
-  <div className="mb-3">
+  <div className="mb-2">
     <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
       {item.categoryLabel}
     </span>
   </div>
 
-  <div className="min-h-[5.5rem]">
+  <div className="min-h-[4rem]">
     {item.description ? (
       <p className="line-clamp-3 text-sm leading-6 text-[#7c8570]">
         {item.description}
@@ -680,9 +680,9 @@ export default function RegistryPage() {
     ) : null}
   </div>
 
-  <div className="mt-5 flex flex-1 flex-col">
+  <div className="mt-3 flex flex-1 flex-col">
     {item.is_contribution_item ? (
-      <div className="mb-5 min-h-[6.5rem]">
+      <div className="mb-5 min-h-[4.5rem]">
         <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
           <span>
             {t.total}:{" "}
@@ -705,7 +705,7 @@ export default function RegistryPage() {
           />
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
+        <div className="mt-1 flex items-center justify-between text-xs text-[#9ba292]">
           <span>
             {t.confirmed}: {euro(item.paid_cents, lang)}
           </span>
