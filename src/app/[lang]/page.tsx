@@ -672,7 +672,7 @@ export default function RegistryPage() {
     </span>
   </div>
 
-  <div className="min-h-[4rem]">
+  <div className="min-h-[2rem]">
     {item.description ? (
       <p className="line-clamp-3 text-sm leading-6 text-[#7c8570]">
         {item.description}
@@ -682,7 +682,7 @@ export default function RegistryPage() {
 
   <div className="mt-3 flex flex-1 flex-col">
     {item.is_contribution_item ? (
-      <div className="mb-5 min-h-[4.5rem]">
+      <div className="mb-5 min-h-[3rem]">
         <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
           <span>
             {t.total}:{" "}
