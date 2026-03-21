@@ -30,22 +30,6 @@ type TotalsRow = {
   reported_cents: number;
 };
 
-const router = useRouter();
-
-useEffect(() => {
-  const handlePageShow = (event: PageTransitionEvent) => {
-    if (event.persisted) {
-      router.refresh();
-    }
-  };
-
-  window.addEventListener("pageshow", handlePageShow);
-
-  return () => {
-    window.removeEventListener("pageshow", handlePageShow);
-  };
-}, [router]);
-
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
     all: "Alle",
@@ -337,7 +321,7 @@ export default function RegistryPage() {
   useEffect(() => {
     let isMounted = true;
 
-    (async () => {
+    const loadRegistry = async () => {
       try {
         if (!isMounted) return;
 
@@ -384,10 +368,25 @@ export default function RegistryPage() {
         if (!isMounted) return;
         setLoading(false);
       }
-    })();
+    };
+
+    loadRegistry();
+
+    const handlePageShow = () => {
+      loadRegistry();
+    };
+
+    const handleFocus = () => {
+      loadRegistry();
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       isMounted = false;
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [lang]);
 
