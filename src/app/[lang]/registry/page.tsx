@@ -321,11 +321,13 @@ export default function RegistryPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadRegistry = async () => {
+    const loadRegistry = async (showLoader = true) => {
       try {
         if (!isMounted) return;
 
-        setLoading(true);
+        if (showLoader) {
+          setLoading(true);
+        }
         setError(null);
 
         const [{ data: itemsData, error: e1 }, { data: totalsData, error: e2 }] =
@@ -366,18 +368,20 @@ export default function RegistryPage() {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         if (!isMounted) return;
-        setLoading(false);
+        if (showLoader) {
+          setLoading(false);
+        }
       }
     };
 
-    loadRegistry();
+    loadRegistry(true);
 
     const handlePageShow = () => {
-      loadRegistry();
+      loadRegistry(false);
     };
 
     const handleFocus = () => {
-      loadRegistry();
+      loadRegistry(false);
     };
 
     window.addEventListener("pageshow", handlePageShow);
@@ -473,7 +477,7 @@ export default function RegistryPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-transparent px-6 py-8 text-[#5e6a50]">
+      <main className="min-h-screen w-full overflow-x-hidden bg-transparent px-6 py-8 text-[#5e6a50]">
         {t.loading}
       </main>
     );
@@ -481,15 +485,15 @@ export default function RegistryPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-transparent px-6 py-8 text-red-600">
+      <main className="min-h-screen w-full overflow-x-hidden bg-transparent px-6 py-8 text-red-600">
         Error: {error}
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-transparent">
-      <div className="mx-auto max-w-6xl px-4 py-8">
+    <main className="min-h-screen w-full overflow-x-hidden bg-transparent">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8">
         <h1 className="text-2xl text-[#5e6a50]">{t.title}</h1>
         <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
 
@@ -503,15 +507,15 @@ export default function RegistryPage() {
           </>
         ) : (
           <>
-            <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
-              <div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-end">
+              <div className="min-w-0">
                 <div className="mb-2 text-sm text-[#7c8570]">{t.filters}</div>
-                <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex max-w-full gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <button
                     type="button"
                     onClick={() => setSelectedCategory("all")}
                     className={[
-                      "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
+                      "shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
                       selectedCategory === "all"
                         ? "border-[#5e6a50] bg-[#5e6a50] text-white"
                         : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
@@ -526,7 +530,7 @@ export default function RegistryPage() {
                       type="button"
                       onClick={() => setSelectedCategory(category)}
                       className={[
-                        "whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
+                        "shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-xs transition",
                         selectedCategory === category
                           ? "border-[#5e6a50] bg-[#5e6a50] text-white"
                           : "border-[#cfd5c7] bg-white text-[#5e6a50] hover:bg-[#f3f1eb]",
@@ -538,7 +542,7 @@ export default function RegistryPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 block text-sm text-[#7c8570]">
                   {t.status}
                 </label>
@@ -553,7 +557,7 @@ export default function RegistryPage() {
                 </select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 block text-sm text-[#7c8570]">
                   {t.sort}
                 </label>
@@ -602,17 +606,17 @@ export default function RegistryPage() {
                     <div
                       key={it.id}
                       className={[
-                        "rounded-2xl border border-[#d8ddd1] bg-white p-4 shadow-sm transition",
+                        "min-w-0 rounded-2xl border border-[#d8ddd1] bg-white p-4 shadow-sm transition",
                         unavailable ? "opacity-80" : "hover:-translate-y-0.5 hover:shadow-md",
                       ].join(" ")}
                     >
                       {it.image_url ? (
-                        <div className="rounded-xl bg-[#f8f6f2] p-3">
+                        <div className="w-full overflow-hidden rounded-xl bg-[#f8f6f2] p-3">
                           <img
                             src={it.image_url}
                             alt={it.title}
                             className={[
-                              "h-44 w-full rounded-lg object-contain transition",
+                              "h-44 w-full max-w-full rounded-lg object-contain transition",
                               unavailable ? "grayscale opacity-70" : "",
                             ].join(" ")}
                           />
@@ -631,10 +635,10 @@ export default function RegistryPage() {
                             </span>
                           </div>
 
-                          <div className="text-base text-[#5e6a50]">{it.title}</div>
+                          <div className="break-words text-base text-[#5e6a50]">{it.title}</div>
 
                           {it.description ? (
-                            <div className="mt-1 line-clamp-2 text-sm text-[#7c8570]">
+                            <div className="mt-1 line-clamp-2 break-words text-sm text-[#7c8570]">
                               {it.description}
                             </div>
                           ) : null}
@@ -646,9 +650,9 @@ export default function RegistryPage() {
                       </div>
 
                       {it.is_contribution_item ? (
-                        <div className="mt-4">
+                        <div className="mt-4 min-w-0">
                           <div className="flex items-start justify-between gap-4 text-sm">
-                            <div className="text-[#7c8570]">
+                            <div className="min-w-0 text-[#7c8570]">
                               <div>
                                 {t.total}:{" "}
                                 <span className="text-[#5e6a50]">{euro(total, lang)}</span>
@@ -662,7 +666,7 @@ export default function RegistryPage() {
                               </div>
                             </div>
 
-                            <div className="text-right text-[#7c8570]">
+                            <div className="shrink-0 text-right text-[#7c8570]">
                               <div>
                                 {t.target}:{" "}
                                 <span className="text-[#5e6a50]">
@@ -683,11 +687,11 @@ export default function RegistryPage() {
                             />
                           </div>
 
-                          <div className="mt-2 flex items-center justify-between text-xs text-[#9ba292]">
-                            <span>
+                          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#9ba292]">
+                            <span className="min-w-0 truncate">
                               {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
                             </span>
-                            <span>{t.darkConfirmed}</span>
+                            <span className="shrink-0">{t.darkConfirmed}</span>
                           </div>
                         </div>
                       ) : it.target_cents ? (
