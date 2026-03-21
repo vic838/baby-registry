@@ -29,11 +29,11 @@ export default function RootLayout({
             className="absolute top-[8%] left-[8%] w-[140px] rotate-6 blur-[0.3px]"
           />
           <img
-            src="/background/varen-1.webp"
+            src="/background/varen.webp"
             className="absolute top-[25%] right-[10%] w-[200px] -rotate-6 blur-[0.3px]"
           />
           <img
-            src="/background/bloem_1.webp"
+            src="/background/bloem.webp"
             className="absolute bottom-[20%] left-[25%] w-[140px] rotate-3 blur-[0.3px]"
           />
           <img
