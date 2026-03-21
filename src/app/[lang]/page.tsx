@@ -46,6 +46,13 @@ type UiItem = {
   reported_cents: number;
 };
 
+const DIAPER_PRIORITY_SLUGS = [
+  "diaper-contribution",
+  "luierbijdrage",
+  "diapers",
+  "diaper-fund",
+];
+
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
     all: "Alle",
@@ -265,36 +272,67 @@ function normalizeCategory(value: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
+    dormir: "sleeping",
+
     feeding: "feeding",
     food: "feeding",
+    voeding: "feeding",
+    alimentació: "feeding",
+    alimentación: "feeding",
+
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
+    cura: "care",
+    cuidado: "care",
+
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
+    desplaçaments: "travel",
+    paseo: "travel",
+
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
+    joguines: "toys",
+    juguetes: "toys",
+
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
+    roba: "clothes",
+    ropa: "clothes",
+
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
+    habitació: "room",
+    habitación: "room",
+
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
+    essentials: "essentials",
+    esenciales: "essentials",
+    "must-haves": "essentials",
+
     other: "other",
     overig: "other",
+    altres: "other",
+    otros: "other",
   };
 
   return aliases[cleaned] ?? cleaned;
+}
+
+function isDiaperPriorityItem(slug: string) {
+  return DIAPER_PRIORITY_SLUGS.includes((slug || "").trim().toLowerCase());
 }
 
 export default function RegistryPage() {
@@ -457,7 +495,16 @@ export default function RegistryPage() {
     } else if (sortOption === "price_desc") {
       result.sort((a, b) => b.displayPrice - a.displayPrice);
     } else {
-      result.sort((a, b) => a.sort_order - b.sort_order);
+      result.sort((a, b) => {
+        const aPriority = isDiaperPriorityItem(a.slug) ? 1 : 0;
+        const bPriority = isDiaperPriorityItem(b.slug) ? 1 : 0;
+
+        if (aPriority !== bPriority) {
+          return bPriority - aPriority;
+        }
+
+        return a.sort_order - b.sort_order;
+      });
     }
 
     return result;
@@ -576,16 +623,16 @@ export default function RegistryPage() {
                       {item.image_url ? (
                         <>
                           <Image
-  src={item.image_url}
-  alt={item.title}
-  fill
-  style={
-    item.unavailable
-      ? { filter: "grayscale(100%)", opacity: 0.6 }
-      : undefined
-  }
-  className="object-contain p-3 transition duration-300"
-/>
+                            src={item.image_url}
+                            alt={item.title}
+                            fill
+                            style={
+                              item.unavailable
+                                ? { filter: "grayscale(100%)", opacity: 0.6 }
+                                : undefined
+                            }
+                            className="object-contain p-3 transition duration-300"
+                          />
                           {item.overlayText ? (
                             <div className="absolute inset-0 flex items-center justify-center p-4">
                               <div className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-[#5e6a50] shadow">
@@ -603,9 +650,13 @@ export default function RegistryPage() {
 
                     <div className="flex flex-1 flex-col p-5">
                       <div className="mb-2 flex items-start justify-between gap-3">
-                        <h3 className="text-lg text-[#5e6a50]">{item.title}</h3>
+                        <h3 className="line-clamp-2 min-h-[3.5rem] text-lg leading-7 text-[#5e6a50]">
+                          {item.title}
+                        </h3>
 
-                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${statusClass}`}>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${statusClass}`}
+                        >
                           {statusText}
                         </span>
                       </div>
@@ -616,19 +667,25 @@ export default function RegistryPage() {
                         </span>
                       </div>
 
-                      {item.description ? (
-                        <p className="mb-4 text-sm leading-6 text-[#7c8570]">{item.description}</p>
-                      ) : null}
+                      <div className="min-h-[4.75rem]">
+                        {item.description ? (
+                          <p className="line-clamp-3 text-sm leading-6 text-[#7c8570]">
+                            {item.description}
+                          </p>
+                        ) : null}
+                      </div>
 
-                      <div className="mt-auto">
+                      <div className="mt-5 flex flex-1 flex-col">
                         {item.is_contribution_item ? (
-                          <div className="mb-5">
+                          <div className="mb-5 min-h-[6.5rem]">
                             <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
                               <span>
-                                {t.total}: <span className="text-[#5e6a50]">{euro(item.total, lang)}</span>
+                                {t.total}:{" "}
+                                <span className="text-[#5e6a50]">{euro(item.total, lang)}</span>
                               </span>
                               <span>
-                                {t.target}: <span className="text-[#5e6a50]">{euro(item.target, lang)}</span>
+                                {t.target}:{" "}
+                                <span className="text-[#5e6a50]">{euro(item.target, lang)}</span>
                               </span>
                             </div>
 
@@ -653,12 +710,12 @@ export default function RegistryPage() {
                             </div>
                           </div>
                         ) : item.target_cents ? (
-                          <div className="mb-5 text-sm text-[#7c8570]">
+                          <div className="mb-5 min-h-[6.5rem] text-sm text-[#7c8570]">
                             {t.target}:{" "}
                             <span className="text-[#5e6a50]">{euro(item.target_cents, lang)}</span>
                           </div>
                         ) : (
-                          <div className="mb-5" />
+                          <div className="mb-5 min-h-[6.5rem]" />
                         )}
 
                         <div className="mt-auto flex gap-3">

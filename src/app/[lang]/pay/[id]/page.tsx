@@ -104,6 +104,7 @@ export default function PayPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [markingReported, setMarkingReported] = useState(false);
   const [sepaQrDataUrl, setSepaQrDataUrl] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const payconiqUrl = process.env.NEXT_PUBLIC_PAYCONIQ_MONEYPOT_URL ?? "";
   const bizumPhone = process.env.NEXT_PUBLIC_BIZUM_PHONE ?? "";
@@ -112,6 +113,11 @@ export default function PayPage() {
   const iban = process.env.NEXT_PUBLIC_BANK_IBAN ?? "";
   const bic = process.env.NEXT_PUBLIC_BANK_BIC ?? "";
   const accountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "";
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    setIsMobile(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -289,31 +295,31 @@ export default function PayPage() {
         {
           key: "payconiq" as const,
           label: "Payconiq",
-          enabled: !!payconiqUrl,
+          enabled: payconiqUrl.trim() !== "",
           icon: <QrCode className="h-4 w-4" />,
         },
         {
           key: "bizum" as const,
           label: "Bizum",
-          enabled: !!bizumPhone,
+          enabled: bizumPhone.trim() !== "",
           icon: <Smartphone className="h-4 w-4" />,
         },
         {
           key: "revolut" as const,
           label: "Revolut",
-          enabled: !!revolutUrl,
+          enabled: revolutUrl.trim() !== "",
           icon: <Globe className="h-4 w-4" />,
         },
         {
           key: "wero" as const,
           label: "Wero",
-          enabled: !!weroPhone,
+          enabled: weroPhone.trim() !== "",
           icon: <Wallet className="h-4 w-4" />,
         },
         {
           key: "sepa" as const,
           label: "SEPA",
-          enabled: !!iban,
+          enabled: iban.trim() !== "",
           icon: <CreditCard className="h-4 w-4" />,
         },
       ].filter((m) => m.enabled),
@@ -339,7 +345,7 @@ export default function PayPage() {
     label: string;
   }) {
     const cls =
-      "min-w-[110px] rounded-xl bg-gray-900 px-4 py-2 text-center text-sm text-white disabled:opacity-60";
+      "min-w-[140px] rounded-xl bg-gray-900 px-4 py-2 text-center text-sm text-white disabled:opacity-60";
 
     if (href) {
       return (
@@ -398,6 +404,10 @@ export default function PayPage() {
     }
   }, [contribution?.status]);
 
+  const deviceHint = isMobile
+    ? "Je gebruikt een smartphone. Open bij voorkeur rechtstreeks een betaalapp via de knoppen hieronder."
+    : "Je gebruikt een computer. Scan de QR-code met je bankapp of gebruik een van de betaalopties hieronder.";
+
   if (loading) {
     return <main className="p-6">Laden…</main>;
   }
@@ -411,7 +421,7 @@ export default function PayPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#f8f6f2]">  
       <div className="mx-auto max-w-xl px-4 py-8">
         <button
           className="text-sm text-gray-600 hover:underline"
@@ -477,7 +487,11 @@ export default function PayPage() {
           </div>
         ) : (
           <div className="mt-6">
-            <div className="flex flex-wrap gap-2">
+            <div className="rounded-2xl border bg-gray-50 p-4 text-sm text-gray-700">
+              {deviceHint}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
               {methods.map((m) => (
                 <button
                   key={m.key}
@@ -508,14 +522,20 @@ export default function PayPage() {
                 </div>
 
                 {activeMethod === "payconiq" ? (
-                  <ActionButton href={payconiqUrl} label="Open" />
+                  <ActionButton
+                    href={payconiqUrl}
+                    label={isMobile ? "Open Payconiq" : "Open"}
+                  />
                 ) : activeMethod === "bizum" ? (
                   <ActionButton
                     onClick={() => copy("Bizum nummer", bizumPhone)}
                     label="Kopieer"
                   />
                 ) : activeMethod === "revolut" ? (
-                  <ActionButton href={revolutUrl} label="Open" />
+                  <ActionButton
+                    href={revolutUrl}
+                    label={isMobile ? "Open Revolut" : "Open"}
+                  />
                 ) : activeMethod === "wero" ? (
                   <ActionButton
                     onClick={() => copy("Wero nummer", weroPhone)}
@@ -524,7 +544,7 @@ export default function PayPage() {
                 ) : (
                   <ActionButton
                     onClick={() => copy("IBAN", iban)}
-                    label="Kopieer IBAN"
+                    label={isMobile ? "Kopieer IBAN" : "Kopieer IBAN"}
                   />
                 )}
               </div>
@@ -536,10 +556,19 @@ export default function PayPage() {
                     referentie in de mededeling.
                   </>
                 ) : activeMethod === "bizum" ? (
-                  <>
-                    Stuur <b>{amount}</b> naar <b>{bizumPhone}</b> en zet de
-                    referentie in het bericht.
-                  </>
+  <>
+    {isMobile ? (
+      <>
+        Open Bizum in je bankapp en plak het nummer en de referentie hieronder.
+        Controleer daarna nog even het bedrag voor je bevestigt.
+      </>
+    ) : (
+      <>
+        Open Bizum in je bankapp en gebruik het nummer, bedrag en de referentie
+        hieronder om de betaling manueel uit te voeren.
+      </>
+    )}
+  </>
                 ) : activeMethod === "revolut" ? (
                   <>
                     Open de Revolut-link en stuur <b>{amount}</b>. Zet de
@@ -551,37 +580,57 @@ export default function PayPage() {
                     Stuur <b>{amount}</b> via Wero naar <b>{weroPhone}</b> en
                     zet de referentie in het bericht of de omschrijving.
                   </>
+                ) : isMobile ? (
+                  <>
+                    Open je bankapp via de knop hieronder of kopieer de
+                    gegevens manueel. Controleer nog even bedrag en referentie
+                    voor je bevestigt.
+                  </>
                 ) : (
                   <>
-                    Open in je bankapp of scan de QR-code. Controleer nadien
-                    nog even bedrag en referentie voor je bevestigt.
+                    Scan de QR-code met je bankapp of gebruik de bankgegevens
+                    hieronder. Controleer nog even bedrag en referentie voor je
+                    bevestigt.
                   </>
                 )}
               </div>
 
               {activeMethod === "bizum" ? (
-                <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-gray-600">Bizum nummer</span>
-                    <div className="flex items-center gap-2">
-                      <code className="font-semibold">{bizumPhone}</code>
-                      <CopyBtn label="Bizum nummer" value={bizumPhone} />
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <span className="text-gray-600">Referentie</span>
-                    <div className="flex items-center gap-2">
-                      <code className="font-semibold">
-                        {contribution.reference}
-                      </code>
-                      <CopyBtn
-                        label="Referentie"
-                        value={contribution.reference}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+  <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm">
+    <div className="mb-3 text-sm text-gray-700">
+      {isMobile
+        ? "Open Bizum in je bankapp en plak nummer en referentie."
+        : "Gebruik deze Bizum-gegevens in je bankapp om de betaling uit te voeren."}
+    </div>
+
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-gray-600">Bizum nummer</span>
+      <div className="flex items-center gap-2">
+        <code className="font-semibold">{bizumPhone}</code>
+        <CopyBtn label="Bizum nummer" value={bizumPhone} />
+      </div>
+    </div>
+
+    <div className="mt-2 flex items-center justify-between gap-3">
+      <span className="text-gray-600">Bedrag</span>
+      <div className="flex items-center gap-2">
+        <code className="font-semibold">{amount}</code>
+        <CopyBtn label="Bedrag" value={amount} />
+      </div>
+    </div>
+
+    <div className="mt-2 flex items-center justify-between gap-3">
+      <span className="text-gray-600">Referentie</span>
+      <div className="flex items-center gap-2">
+        <code className="font-semibold">{contribution.reference}</code>
+        <CopyBtn
+          label="Referentie"
+          value={contribution.reference}
+        />
+      </div>
+    </div>
+  </div>
+) : null}
 
               {activeMethod === "wero" ? (
                 <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm">
@@ -615,12 +664,12 @@ export default function PayPage() {
                         href={sepaPaymentLink}
                         className="rounded-xl bg-green-600 px-4 py-3 text-sm font-medium text-white"
                       >
-                        Open in bankapp
+                        {isMobile ? "Open in bankapp" : "Open in bankapp"}
                       </a>
                     </div>
                   ) : null}
 
-                  {sepaQrDataUrl ? (
+                  {!isMobile && sepaQrDataUrl ? (
                     <div className="mb-4 flex flex-col items-center">
                       <img
                         src={sepaQrDataUrl}
