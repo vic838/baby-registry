@@ -90,6 +90,7 @@ const uiText: Record<
     loading: string;
     total: string;
     target: string;
+    price: string;
     confirmed: string;
     reported: string;
     alreadyOffered: string;
@@ -118,6 +119,7 @@ const uiText: Record<
     loading: "Laden…",
     total: "Totaal",
     target: "Doel",
+    price: "Prijs",
     confirmed: "bevestigd",
     reported: "gemeld",
     alreadyOffered: "Al aangeboden",
@@ -145,6 +147,7 @@ const uiText: Record<
     loading: "Carregant…",
     total: "Total",
     target: "Objectiu",
+    price: "Preu",
     confirmed: "confirmat",
     reported: "anunciat",
     alreadyOffered: "Ja ofert",
@@ -172,6 +175,7 @@ const uiText: Record<
     loading: "Loading…",
     total: "Total",
     target: "Target",
+    price: "Price",
     confirmed: "confirmed",
     reported: "reported",
     alreadyOffered: "Already offered",
@@ -199,6 +203,7 @@ const uiText: Record<
     loading: "Cargando…",
     total: "Total",
     target: "Objetivo",
+    price: "Precio",
     confirmed: "confirmado",
     reported: "anunciado",
     alreadyOffered: "Ya ofrecido",
@@ -453,7 +458,7 @@ export default function RegistryPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f8f6f2] px-6 py-8 text-[#5e6a50]">
+      <main className="min-h-screen bg-transparent px-6 py-8 text-[#5e6a50]">
         {t.loading}
       </main>
     );
@@ -461,14 +466,14 @@ export default function RegistryPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#f8f6f2] px-6 py-8 text-red-600">
+      <main className="min-h-screen bg-transparent px-6 py-8 text-red-600">
         Error: {error}
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f6f2]">
+    <main className="min-h-screen bg-transparent">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-2xl text-[#5e6a50]">{t.title}</h1>
         <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
@@ -591,7 +596,10 @@ export default function RegistryPage() {
                           <img
                             src={it.image_url}
                             alt={it.title}
-                            className="h-44 w-full rounded-lg object-contain"
+                            className={[
+                              "h-44 w-full rounded-lg object-contain transition",
+                              unavailable ? "grayscale opacity-70" : "",
+                            ].join(" ")}
                           />
                         </div>
                       ) : (
@@ -669,7 +677,7 @@ export default function RegistryPage() {
                         </div>
                       ) : it.target_cents ? (
                         <div className="mt-4 text-sm text-[#7c8570]">
-                          {t.target}:{" "}
+                          {t.price}:{" "}
                           <span className="text-[#5e6a50]">{euro(it.target_cents, lang)}</span>
                         </div>
                       ) : null}
@@ -677,15 +685,20 @@ export default function RegistryPage() {
                       <div className="mt-5">
                         <button
                           type="button"
-                          onClick={() => router.push(`/${lang}/item/${it.slug}`)}
+                          disabled={unavailable}
+                          onClick={() => {
+                            if (!unavailable) {
+                              router.push(`/${lang}/item/${it.slug}`);
+                            }
+                          }}
                           className={[
                             "w-full rounded-2xl px-4 py-3 text-sm transition",
                             unavailable
-                              ? "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]"
+                              ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
                               : "bg-[#5e6a50] text-white hover:opacity-90",
                           ].join(" ")}
                         >
-                          {unavailable ? t.statusOffered : ctaText}
+                          {unavailable ? statusText : ctaText}
                         </button>
                       </div>
                     </div>
@@ -697,7 +710,6 @@ export default function RegistryPage() {
             <RegistryFaqSection lang={lang} compact />
           </>
         )}
-        <RegistryFaqSection lang={lang} compact />
       </div>
     </main>
   );
