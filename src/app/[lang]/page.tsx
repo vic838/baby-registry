@@ -654,117 +654,123 @@ export default function RegistryPage() {
                     </div>
 
                     <div className="flex flex-1 flex-col p-5">
-  <div className="mb-1 flex items-start justify-between gap-2">
-    <h3 className="line-clamp-2 min-h-[3rem] text-lg leading-7 text-[#5e6a50]">
-      {item.title}
-    </h3>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-2 min-h-[3rem] text-lg leading-7 text-[#5e6a50]">
+                          {item.title}
+                        </h3>
 
-    <span
-      className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${statusClass}`}
-    >
-      {statusText}
-    </span>
-  </div>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${statusClass}`}
+                        >
+                          {statusText}
+                        </span>
+                      </div>
 
-  <div className="mb-2">
-    <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
-      {item.categoryLabel}
-    </span>
-  </div>
+                      <div className="mb-2">
+                        <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                          {item.categoryLabel}
+                        </span>
+                      </div>
 
-  <div className="min-h-[2rem]">
-    {item.description ? (
-      <p className="line-clamp-3 text-sm leading-6 text-[#7c8570]">
-        {item.description}
-      </p>
-    ) : null}
-  </div>
+                      <div className="min-h-[2rem]">
+                        {item.description ? (
+                          <p className="line-clamp-3 text-sm leading-6 text-[#7c8570]">
+                            {item.description}
+                          </p>
+                        ) : null}
+                      </div>
 
-  <div className="mt-3 flex flex-1 flex-col">
-    {item.is_contribution_item ? (
-      <div className="mb-5 min-h-[3rem]">
-        <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
-          <span>
-            {t.total}:{" "}
-            <span className="text-[#5e6a50]">{euro(item.total, lang)}</span>
-          </span>
-          <span>
-            {t.target}:{" "}
-            <span className="text-[#5e6a50]">{euro(item.target, lang)}</span>
-          </span>
-        </div>
+                      <div className="mt-3 flex flex-1 flex-col">
+                        {item.is_contribution_item ? (
+                          <div className="mb-3 min-h-[3.5rem]">
+                            <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
+                              <span>
+                                {t.total}:{" "}
+                                <span className="text-[#5e6a50]">
+                                  {euro(item.total, lang)}
+                                </span>
+                              </span>
+                              <span>
+                                {t.target}:{" "}
+                                <span className="text-[#5e6a50]">
+                                  {euro(item.target, lang)}
+                                </span>
+                              </span>
+                            </div>
 
-        <div className="h-2.5 overflow-hidden rounded-full bg-[#e8ebe3]">
-          <div
-            className="h-full rounded-full bg-[#cfd5c7]"
-            style={{ width: `${item.pct}%` }}
-          />
-          <div
-            className="-mt-2.5 h-full rounded-full bg-[#5e6a50]"
-            style={{ width: `${Math.round(item.paidProgress * 100)}%` }}
-          />
-        </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-[#e8ebe3]">
+                              <div
+                                className="h-full rounded-full bg-[#cfd5c7]"
+                                style={{ width: `${item.pct}%` }}
+                              />
+                              <div
+                                className="-mt-2 h-full rounded-full bg-[#5e6a50]"
+                                style={{ width: `${Math.round(item.paidProgress * 100)}%` }}
+                              />
+                            </div>
 
-        <div className="mt-1 flex items-center justify-between text-xs text-[#9ba292]">
-          <span>
-            {t.confirmed}: {euro(item.paid_cents, lang)}
-          </span>
-          <span>
-            {t.reported}: {euro(item.reported_cents, lang)}
-          </span>
-        </div>
-      </div>
-    ) : item.target_cents ? (
-      <div className="mb-5 min-h-[6.5rem] text-sm text-[#7c8570]">
-        {t.price}:{" "}
-        <span className="text-[#5e6a50]">{euro(item.target_cents, lang)}</span>
-      </div>
-    ) : (
-      <div className="mb-5 min-h-[6.5rem]" />
-    )}
+                            <div className="mt-1 flex items-center justify-between text-xs text-[#9ba292]">
+                              <span>
+                                {t.confirmed}: {euro(item.paid_cents, lang)}
+                              </span>
+                              <span>
+                                {t.reported}: {euro(item.reported_cents, lang)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : item.target_cents ? (
+                          <div className="mb-3 min-h-[3.5rem] text-sm text-[#7c8570]">
+                            {t.price}:{" "}
+                            <span className="text-[#5e6a50]">
+                              {euro(item.target_cents, lang)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mb-3 min-h-[3.5rem]" />
+                        )}
 
-    <div className="mt-auto flex gap-3">
-      <button
-        type="button"
-        disabled={item.unavailable}
-        onClick={() => {
-          if (!item.unavailable) {
-            router.push(`/${lang}/item/${item.slug}`);
-          }
-        }}
-        className={[
-          "flex-1 rounded-2xl px-4 py-3 text-sm transition",
-          item.unavailable
-            ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
-            : "bg-[#5e6a50] text-white hover:opacity-90",
-        ].join(" ")}
-      >
-        {item.unavailable ? statusText : ctaText}
-      </button>
+                        <div className="mt-auto flex gap-3">
+                          <button
+                            type="button"
+                            disabled={item.unavailable}
+                            onClick={() => {
+                              if (!item.unavailable) {
+                                router.push(`/${lang}/item/${item.slug}`);
+                              }
+                            }}
+                            className={[
+                              "flex-1 rounded-2xl px-4 py-3 text-sm transition",
+                              item.unavailable
+                                ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
+                                : "bg-[#5e6a50] text-white hover:opacity-90",
+                            ].join(" ")}
+                          >
+                            {item.unavailable ? statusText : ctaText}
+                          </button>
 
-      {!item.is_contribution_item ? (
-        <button
-          type="button"
-          disabled={item.unavailable}
-          onClick={() => {
-            if (!item.unavailable) {
-              router.push(`/${lang}/item/${item.slug}`);
-            }
-          }}
-          className={[
-            "rounded-2xl px-4 py-3 text-sm transition",
-            item.unavailable
-              ? "cursor-not-allowed bg-[#f3f1eb] text-[#c0c5bc]"
-              : "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]",
-          ].join(" ")}
-          aria-label={ctaText}
-        >
-          +
-        </button>
-      ) : null}
-    </div>
-  </div>
-</div>
+                          {!item.is_contribution_item ? (
+                            <button
+                              type="button"
+                              disabled={item.unavailable}
+                              onClick={() => {
+                                if (!item.unavailable) {
+                                  router.push(`/${lang}/item/${item.slug}`);
+                                }
+                              }}
+                              className={[
+                                "rounded-2xl px-4 py-3 text-sm transition",
+                                item.unavailable
+                                  ? "cursor-not-allowed bg-[#f3f1eb] text-[#c0c5bc]"
+                                  : "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]",
+                              ].join(" ")}
+                              aria-label={ctaText}
+                            >
+                              +
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
                   </article>
                 );
               })}
