@@ -114,6 +114,7 @@ const uiText: Record<
     chooseLanguage: string;
     total: string;
     target: string;
+    price: string;
     confirmed: string;
     reported: string;
     available: string;
@@ -142,11 +143,12 @@ const uiText: Record<
     chooseLanguage: "Taal",
     total: "Totaal",
     target: "Doel",
+    price: "Prijs",
     confirmed: "Bevestigd",
     reported: "Aangekondigd",
     available: "Beschikbaar",
     alreadyOffered: "Al aangeboden",
-    full: "Volzet",
+    full: "Volbracht",
     noTarget: "Geen doelbedrag",
     ofGoal: "van doel",
     filters: "Filters",
@@ -169,6 +171,7 @@ const uiText: Record<
     chooseLanguage: "Idioma",
     total: "Total",
     target: "Objectiu",
+    price: "Preu",
     confirmed: "Confirmat",
     reported: "Anunciat",
     available: "Disponible",
@@ -196,6 +199,7 @@ const uiText: Record<
     chooseLanguage: "Language",
     total: "Total",
     target: "Target",
+    price: "Price",
     confirmed: "Confirmed",
     reported: "Reported",
     available: "Available",
@@ -223,6 +227,7 @@ const uiText: Record<
     chooseLanguage: "Idioma",
     total: "Total",
     target: "Objetivo",
+    price: "Precio",
     confirmed: "Confirmado",
     reported: "Anunciado",
     available: "Disponible",
@@ -711,7 +716,7 @@ export default function RegistryPage() {
       </div>
     ) : item.target_cents ? (
       <div className="mb-5 min-h-[6.5rem] text-sm text-[#7c8570]">
-        {t.target}:{" "}
+        {t.price}:{" "}
         <span className="text-[#5e6a50]">{euro(item.target_cents, lang)}</span>
       </div>
     ) : (
