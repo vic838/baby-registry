@@ -20,31 +20,33 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={tenorSans.variable}>
-      <body className="antialiased relative">
-        
-        {/* 🌿 Background layer */}
-        <div className="fixed inset-0 -z-10 pointer-events-none opacity-[0.06] hidden md:block">
+      <body className="relative min-h-screen bg-[#f8f6f2] antialiased">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.35] md:opacity-[0.12]">
           <img
             src="/background/vogel.webp"
-            className="absolute top-[8%] left-[8%] w-[140px] rotate-6 blur-[0.3px]"
+            alt=""
+            className="absolute left-[6%] top-[10%] w-[220px] rotate-6 blur-[0.3px] md:w-[140px]"
           />
           <img
             src="/background/varen.webp"
-            className="absolute top-[25%] right-[10%] w-[200px] -rotate-6 blur-[0.3px]"
+            alt=""
+            className="absolute right-[6%] top-[22%] w-[120px] -rotate-6 blur-[0.3px] md:w-[200px]"
           />
           <img
             src="/background/bloem.webp"
-            className="absolute bottom-[20%] left-[25%] w-[140px] rotate-3 blur-[0.3px]"
+            alt=""
+            className="absolute bottom-[18%] left-[12%] w-[90px] rotate-3 blur-[0.3px] md:left-[25%] md:w-[140px]"
           />
           <img
             src="/background/bessen.webp"
-            className="absolute bottom-[10%] right-[15%] w-[160px] -rotate-12 blur-[0.3px]"
+            alt=""
+            className="absolute bottom-[10%] right-[8%] w-[100px] -rotate-12 blur-[0.3px] md:w-[160px]"
           />
         </div>
 
-        {/* 📄 Content */}
-        {children}
-
+        <div className="relative z-10">
+          {children}
+        </div>
       </body>
     </html>
   );
