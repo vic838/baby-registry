@@ -40,6 +40,29 @@ type ItemView = {
   reported_cents: number;
 };
 
+type CartLine =
+  | {
+      type: "item";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      quantity: number;
+      unit_cents: number;
+      addedAt: string;
+    }
+  | {
+      type: "contribution";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      amount_cents: number;
+      addedAt: string;
+    };
+
+const CART_STORAGE_KEY = "birthlist_cart_v1";
+
 const uiText: Record<
   Lang,
   {
@@ -48,20 +71,19 @@ const uiText: Record<
     loading: string;
     notFound: string;
     contributeTitle: string;
-    name: string;
-    email: string;
-    message: string;
     amount: string;
     submit: string;
     submitting: string;
-    placeholderName: string;
-    placeholderEmail: string;
-    placeholderMessage: string;
     invalidAmount: string;
     unavailable: string;
     remaining: string;
     tooHighAmount: string;
     suggestedAmounts: string;
+    noImage: string;
+    addedTitle: string;
+    addedBody: string;
+    viewCart: string;
+    close: string;
   }
 > = {
   nl: {
@@ -70,20 +92,19 @@ const uiText: Record<
     loading: "Laden…",
     notFound: "Item niet gevonden.",
     contributeTitle: "Bijdragen aan dit item",
-    name: "Naam",
-    email: "E-mail",
-    message: "Bericht",
     amount: "Bedrag",
-    submit: "Ga naar betalen",
+    submit: "Toevoegen aan mandje",
     submitting: "Bezig…",
-    placeholderName: "Je naam",
-    placeholderEmail: "je@email.com",
-    placeholderMessage: "Optioneel bericht",
     invalidAmount: "Geef een geldig bedrag in.",
     unavailable: "Bijdragen is voor dit item niet beschikbaar.",
     remaining: "Nog nodig",
     tooHighAmount: "Bedrag is hoger dan het resterende bedrag.",
     suggestedAmounts: "Snelle keuzes",
+    noImage: "Geen afbeelding",
+    addedTitle: "Toegevoegd aan mandje",
+    addedBody: "Je bijdrage werd toegevoegd aan je mandje.",
+    viewCart: "Bekijk mandje",
+    close: "Sluiten",
   },
   ca: {
     back: "← Tornar a l’article",
@@ -91,20 +112,19 @@ const uiText: Record<
     loading: "Carregant…",
     notFound: "Article no trobat.",
     contributeTitle: "Contribuir a aquest article",
-    name: "Nom",
-    email: "Correu electrònic",
-    message: "Missatge",
     amount: "Import",
-    submit: "Continuar al pagament",
+    submit: "Afegir a la cistella",
     submitting: "En curs…",
-    placeholderName: "El teu nom",
-    placeholderEmail: "tu@email.com",
-    placeholderMessage: "Missatge opcional",
     invalidAmount: "Introdueix un import vàlid.",
     unavailable: "La contribució no està disponible per a aquest article.",
     remaining: "Encara falta",
     tooHighAmount: "L'import és superior al que queda pendent.",
     suggestedAmounts: "Imports suggerits",
+    noImage: "Sense imatge",
+    addedTitle: "Afegit a la cistella",
+    addedBody: "La teva contribució s'ha afegit a la cistella.",
+    viewCart: "Veure cistella",
+    close: "Tancar",
   },
   en: {
     back: "← Back to item",
@@ -112,20 +132,19 @@ const uiText: Record<
     loading: "Loading…",
     notFound: "Item not found.",
     contributeTitle: "Contribute to this item",
-    name: "Name",
-    email: "Email",
-    message: "Message",
     amount: "Amount",
-    submit: "Continue to payment",
+    submit: "Add to cart",
     submitting: "Submitting…",
-    placeholderName: "Your name",
-    placeholderEmail: "you@email.com",
-    placeholderMessage: "Optional message",
     invalidAmount: "Please enter a valid amount.",
     unavailable: "Contribution is not available for this item.",
     remaining: "Still needed",
     tooHighAmount: "Amount is higher than the remaining amount.",
     suggestedAmounts: "Suggested amounts",
+    noImage: "No image",
+    addedTitle: "Added to cart",
+    addedBody: "Your contribution was added to your cart.",
+    viewCart: "View cart",
+    close: "Close",
   },
   es: {
     back: "← Volver al artículo",
@@ -133,20 +152,19 @@ const uiText: Record<
     loading: "Cargando…",
     notFound: "Artículo no encontrado.",
     contributeTitle: "Contribuir a este artículo",
-    name: "Nombre",
-    email: "Correo electrónico",
-    message: "Mensaje",
     amount: "Importe",
-    submit: "Continuar al pago",
+    submit: "Añadir al carrito",
     submitting: "Enviando…",
-    placeholderName: "Tu nombre",
-    placeholderEmail: "tu@email.com",
-    placeholderMessage: "Mensaje opcional",
     invalidAmount: "Introduce un importe válido.",
     unavailable: "La contribución no está disponible para este artículo.",
     remaining: "Aún falta",
     tooHighAmount: "El importe es superior al importe restante.",
     suggestedAmounts: "Importes sugeridos",
+    noImage: "Sin imagen",
+    addedTitle: "Añadido al carrito",
+    addedBody: "Tu contribución se ha añadido al carrito.",
+    viewCart: "Ver carrito",
+    close: "Cerrar",
   },
 };
 
@@ -172,6 +190,46 @@ function clamp01(n: number) {
   return Math.max(0, Math.min(1, n));
 }
 
+function readCart(): CartLine[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCart(lines: CartLine[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+  window.dispatchEvent(new Event("birthlist-cart-updated"));
+}
+
+function addContributionToCart(params: {
+  itemId: string;
+  slug: string;
+  title: string;
+  image_url: string | null;
+  amount_cents: number;
+}) {
+  const current = readCart();
+
+  current.push({
+    type: "contribution",
+    itemId: params.itemId,
+    slug: params.slug,
+    title: params.title,
+    image_url: params.image_url,
+    amount_cents: params.amount_cents,
+    addedAt: new Date().toISOString(),
+  });
+
+  writeCart(current);
+}
+
 export default function ContributePage() {
   const router = useRouter();
   const params = useParams<{ lang: string; slug: string }>();
@@ -186,11 +244,9 @@ export default function ContributePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [amountEuros, setAmountEuros] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showAddedToast, setShowAddedToast] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -292,35 +348,15 @@ export default function ContributePage() {
     try {
       setSubmitting(true);
 
-      const res = await fetch("/api/contributions/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          itemSlug: item.slug,
-          name: name.trim(),
-          email: email.trim() || null,
-          message: message.trim() || null,
-          amountCents: parsedCents,
-          lang,
-        }),
+      addContributionToCart({
+        itemId: item.id,
+        slug: item.slug,
+        title: item.title,
+        image_url: item.image_url,
+        amount_cents: parsedCents,
       });
 
-      const json = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(json?.error ?? "Could not create contribution.");
-      }
-
-      const contributionId = json?.id;
-      const token = json?.token;
-
-      if (!contributionId || !token) {
-        throw new Error("Incomplete response from server.");
-      }
-
-      router.push(`/${lang}/pay/${contributionId}?t=${encodeURIComponent(token)}`);
+      setShowAddedToast(true);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -410,7 +446,7 @@ export default function ContributePage() {
             </div>
           ) : (
             <div className="flex h-64 items-center justify-center rounded-2xl bg-[#f3f1eb] text-[#8d9484]">
-              No image
+              {t.noImage}
             </div>
           )}
 
@@ -443,33 +479,6 @@ export default function ContributePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div>
-              <label className="mb-2 block text-sm text-[#5e6a50]">
-                {t.name}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t.placeholderName}
-                required
-                className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-[#5e6a50] outline-none focus:border-[#5e6a50]"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm text-[#5e6a50]">
-                {t.email}
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t.placeholderEmail}
-                className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-[#5e6a50] outline-none focus:border-[#5e6a50]"
-              />
-            </div>
-
             <div>
               <label className="mb-2 block text-sm text-[#5e6a50]">
                 {t.amount}
@@ -529,19 +538,6 @@ export default function ContributePage() {
               />
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm text-[#5e6a50]">
-                {t.message}
-              </label>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={t.placeholderMessage}
-                rows={4}
-                className="w-full rounded-2xl border border-[#d8ddd1] bg-white px-4 py-3 text-[#5e6a50] outline-none focus:border-[#5e6a50]"
-              />
-            </div>
-
             <button
               type="submit"
               disabled={submitting}
@@ -557,6 +553,36 @@ export default function ContributePage() {
           </form>
         </div>
       </div>
+
+      {showAddedToast ? (
+        <div className="fixed bottom-5 right-5 z-50 w-[calc(100%-2rem)] max-w-[420px] rounded-[22px] border border-[#d8ddd1] bg-white p-4 shadow-lg">
+          <div className="mb-1 text-[18px] font-medium text-[#5e6a50]">
+            {t.addedTitle}
+          </div>
+          <div className="mb-3 text-[15px] text-[#5e6a50]">{t.addedBody}</div>
+          <div className="mb-3 text-[15px] text-[#7c8570]">
+            {item.title} — {amountEuros ? `€${amountEuros}` : ""}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push(`/${lang}/cart`)}
+              className="rounded-[14px] bg-[#5e6a50] px-4 py-2 text-sm text-white transition hover:opacity-90"
+            >
+              {t.viewCart}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAddedToast(false)}
+              className="rounded-[14px] border border-[#d8ddd1] px-4 py-2 text-sm text-[#5e6a50] transition hover:bg-[#f7f5ef]"
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

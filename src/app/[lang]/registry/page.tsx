@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import RegistryFaqSection from "@/components/RegistryFaqSection";
 
 type Lang = "nl" | "ca" | "en" | "es";
 type StatusFilter = "all" | "available" | "offered";
@@ -473,9 +474,13 @@ export default function RegistryPage() {
         <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
 
         {cards.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-[#d8ddd1] bg-white p-6 text-sm text-[#6c7561] shadow-sm">
-            {t.empty}
-          </div>
+          <>
+            <div className="mt-8 rounded-2xl border border-[#d8ddd1] bg-white p-6 text-sm text-[#6c7561] shadow-sm">
+              {t.empty}
+            </div>
+
+            <RegistryFaqSection lang={lang} compact />
+          </>
         ) : (
           <>
             <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
@@ -688,6 +693,8 @@ export default function RegistryPage() {
                 }
               )}
             </div>
+
+            <RegistryFaqSection lang={lang} compact />
           </>
         )}
       </div>

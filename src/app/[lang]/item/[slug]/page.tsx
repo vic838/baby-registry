@@ -39,6 +39,29 @@ type ItemViewRow = {
   lang: Lang;
 };
 
+type CartLine =
+  | {
+      type: "item";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      quantity: number;
+      unit_cents: number;
+      addedAt: string;
+    }
+  | {
+      type: "contribution";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      amount_cents: number;
+      addedAt: string;
+    };
+
+const CART_STORAGE_KEY = "birthlist_cart_v1";
+
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
     sleeping: "Slapen",
@@ -103,6 +126,11 @@ const uiText: Record<
     ofGoal: string;
     offer: string;
     contribute: string;
+    addedTitle: string;
+    addedBody: string;
+    viewCart: string;
+    close: string;
+    noImage: string;
   }
 > = {
   nl: {
@@ -120,6 +148,11 @@ const uiText: Record<
     ofGoal: "van doel",
     offer: "Ga verder om dit aan te bieden",
     contribute: "Ga verder om bij te dragen",
+    addedTitle: "Toegevoegd aan mandje",
+    addedBody: "Dit item werd toegevoegd aan je mandje.",
+    viewCart: "Bekijk mandje",
+    close: "Sluiten",
+    noImage: "Geen afbeelding",
   },
   ca: {
     back: "← Tornar a la llista",
@@ -136,6 +169,11 @@ const uiText: Record<
     ofGoal: "de l’objectiu",
     offer: "Continuar per oferir-ho",
     contribute: "Continuar per contribuir",
+    addedTitle: "Afegit a la cistella",
+    addedBody: "Aquest article s'ha afegit a la cistella.",
+    viewCart: "Veure cistella",
+    close: "Tancar",
+    noImage: "Sense imatge",
   },
   en: {
     back: "← Back to list",
@@ -152,6 +190,11 @@ const uiText: Record<
     ofGoal: "of goal",
     offer: "Continue to offer this",
     contribute: "Continue to contribute",
+    addedTitle: "Added to cart",
+    addedBody: "This item was added to your cart.",
+    viewCart: "View cart",
+    close: "Close",
+    noImage: "No image",
   },
   es: {
     back: "← Volver a la lista",
@@ -168,6 +211,11 @@ const uiText: Record<
     ofGoal: "del objetivo",
     offer: "Continuar para ofrecerlo",
     contribute: "Continuar para contribuir",
+    addedTitle: "Añadido al carrito",
+    addedBody: "Este artículo se ha añadido al carrito.",
+    viewCart: "Ver carrito",
+    close: "Cerrar",
+    noImage: "Sin imagen",
   },
 };
 
@@ -223,6 +271,49 @@ function normalizeCategory(category: string | null | undefined) {
   return aliases[value] ?? (value || "other");
 }
 
+function readCart(): CartLine[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCart(lines: CartLine[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(lines));
+}
+
+function addClassicItemToCart(item: Item) {
+  const current = readCart();
+
+  const alreadyExists = current.some(
+    (line) => line.type === "item" && line.itemId === item.id
+  );
+
+  if (alreadyExists) {
+    writeCart(current);
+    return;
+  }
+
+  current.push({
+    type: "item",
+    itemId: item.id,
+    slug: item.slug,
+    title: item.title,
+    image_url: item.image_url,
+    quantity: 1,
+    unit_cents: Math.max(0, Number(item.target_cents ?? 0)),
+    addedAt: new Date().toISOString(),
+  });
+
+  writeCart(current);
+}
+
 export default function ItemDetailPage() {
   const router = useRouter();
   const params = useParams<{ lang: string; slug: string }>();
@@ -237,6 +328,7 @@ export default function ItemDetailPage() {
   const [totals, setTotals] = useState<TotalsRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddedToast, setShowAddedToast] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -345,6 +437,20 @@ export default function ItemDetailPage() {
     };
   }, [item, totals, lang]);
 
+  function handleMainAction() {
+    if (!item || !view) return;
+
+    if (view.disabled) return;
+
+    if (item.is_contribution_item) {
+      router.push(`/${lang}/contribute/${item.slug}`);
+      return;
+    }
+
+    addClassicItemToCart(item);
+    setShowAddedToast(true);
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#f8f6f2] px-4 py-8 text-[#5e6a50]">
@@ -417,7 +523,7 @@ export default function ItemDetailPage() {
                 </div>
               ) : (
                 <div className="flex h-72 items-center justify-center rounded-2xl bg-[#f3f1eb] text-[#8d9484]">
-                  No image
+                  {t.noImage}
                 </div>
               )}
             </div>
@@ -492,7 +598,7 @@ export default function ItemDetailPage() {
                 <button
                   type="button"
                   disabled={view.disabled}
-                  onClick={() => router.push(`/${lang}/contribute/${item.slug}`)}
+                  onClick={handleMainAction}
                   className={[
                     "w-full rounded-2xl px-5 py-4 text-center transition",
                     view.disabled
@@ -507,6 +613,34 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
+
+      {showAddedToast ? (
+        <div className="fixed bottom-5 right-5 z-50 w-[calc(100%-2rem)] max-w-[420px] rounded-[22px] border border-[#d8ddd1] bg-white p-4 shadow-lg">
+          <div className="mb-1 text-[18px] font-medium text-[#5e6a50]">
+            {t.addedTitle}
+          </div>
+          <div className="mb-3 text-[15px] text-[#5e6a50]">{t.addedBody}</div>
+          <div className="mb-3 text-[15px] text-[#7c8570]">{item.title}</div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push(`/${lang}/cart`)}
+              className="rounded-[14px] bg-[#5e6a50] px-4 py-2 text-sm text-white transition hover:opacity-90"
+            >
+              {t.viewCart}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAddedToast(false)}
+              className="rounded-[14px] border border-[#d8ddd1] px-4 py-2 text-sm text-[#5e6a50] transition hover:bg-[#f7f5ef]"
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

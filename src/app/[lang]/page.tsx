@@ -113,6 +113,7 @@ const uiText: Record<
     noTarget: string;
     ofGoal: string;
     filters: string;
+    category: string;
     status: string;
     sort: string;
     statusAll: string;
@@ -140,6 +141,7 @@ const uiText: Record<
     noTarget: "Geen doelbedrag",
     ofGoal: "van doel",
     filters: "Filters",
+    category: "Categorie",
     status: "Status",
     sort: "Sortering",
     statusAll: "Alles",
@@ -166,6 +168,7 @@ const uiText: Record<
     noTarget: "Sense import objectiu",
     ofGoal: "de l’objectiu",
     filters: "Filtres",
+    category: "Categoria",
     status: "Estat",
     sort: "Ordenació",
     statusAll: "Tots",
@@ -192,6 +195,7 @@ const uiText: Record<
     noTarget: "No target amount",
     ofGoal: "of goal",
     filters: "Filters",
+    category: "Category",
     status: "Status",
     sort: "Sort",
     statusAll: "All",
@@ -218,6 +222,7 @@ const uiText: Record<
     noTarget: "Sin importe objetivo",
     ofGoal: "del objetivo",
     filters: "Filtros",
+    category: "Categoría",
     status: "Estado",
     sort: "Ordenar",
     statusAll: "Todos",
@@ -387,6 +392,12 @@ export default function RegistryPage() {
       const progress = target > 0 ? clamp01(total / target) : 0;
       const paidProgress = target > 0 ? clamp01(item.paid_cents / target) : 0;
       const categoryKey = normalizeCategory(item.category);
+      const shouldBlurImage = item.already_owned && !item.is_contribution_item;
+      const overlayText = item.already_owned
+        ? t.alreadyOffered
+        : reached
+        ? t.full
+        : null;
 
       return {
         ...item,
@@ -400,13 +411,25 @@ export default function RegistryPage() {
         categoryKey,
         categoryLabel: categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other,
         displayPrice: item.target_cents ?? 0,
+        shouldBlurImage,
+        overlayText,
       };
     });
-  }, [items, lang]);
+  }, [items, lang, t.alreadyOffered, t.full]);
 
   const availableCategories = useMemo(() => {
     const categories = Array.from(new Set(cards.map((c) => c.categoryKey)));
-    const preferred = ["essentials", "sleeping", "feeding", "care", "travel", "room", "clothes", "toys", "other"];
+    const preferred = [
+      "essentials",
+      "sleeping",
+      "feeding",
+      "care",
+      "travel",
+      "room",
+      "clothes",
+      "toys",
+      "other",
+    ];
     return preferred.filter((c) => categories.includes(c));
   }, [cards]);
 
@@ -477,7 +500,7 @@ export default function RegistryPage() {
           <>
             <div className="mb-6 grid gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#d8ddd1] md:grid-cols-3">
               <div>
-                <label className="mb-2 block text-sm text-[#7c8570]">Categorie</label>
+                <label className="mb-2 block text-sm text-[#7c8570]">{t.category}</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -542,12 +565,24 @@ export default function RegistryPage() {
                   >
                     <div className="relative aspect-[4/3] bg-[#f3f1eb]">
                       {item.image_url ? (
-                        <Image
-                          src={item.image_url}
-                          alt={item.title}
-                          fill
-                          className="object-contain p-3"
-                        />
+                        <>
+                          <Image
+                            src={item.image_url}
+                            alt={item.title}
+                            fill
+                            className={[
+                              "object-contain p-3 transition duration-300",
+                              item.shouldBlurImage ? "scale-[0.98] opacity-40 blur-[2px]" : "",
+                            ].join(" ")}
+                          />
+                          {item.overlayText ? (
+                            <div className="absolute inset-0 flex items-center justify-center p-4">
+                              <div className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-[#5e6a50] shadow">
+                                {item.overlayText}
+                              </div>
+                            </div>
+                          ) : null}
+                        </>
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-[#8d9484]">
                           No image
@@ -616,11 +651,16 @@ export default function RegistryPage() {
                         <div className="mt-auto flex gap-3">
                           <button
                             type="button"
-                            onClick={() => router.push(`/${lang}/item/${item.slug}`)}
+                            disabled={item.unavailable}
+                            onClick={() => {
+                              if (!item.unavailable) {
+                                router.push(`/${lang}/item/${item.slug}`);
+                              }
+                            }}
                             className={[
                               "flex-1 rounded-2xl px-4 py-3 text-sm transition",
                               item.unavailable
-                                ? "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]"
+                                ? "cursor-not-allowed bg-[#f3f1eb] text-[#8d9484]"
                                 : "bg-[#5e6a50] text-white hover:opacity-90",
                             ].join(" ")}
                           >
@@ -630,8 +670,18 @@ export default function RegistryPage() {
                           {!item.is_contribution_item ? (
                             <button
                               type="button"
-                              onClick={() => router.push(`/${lang}/item/${item.slug}`)}
-                              className="rounded-2xl bg-[#f3f1eb] px-4 py-3 text-sm text-[#5e6a50] transition hover:bg-[#ece8df]"
+                              disabled={item.unavailable}
+                              onClick={() => {
+                                if (!item.unavailable) {
+                                  router.push(`/${lang}/item/${item.slug}`);
+                                }
+                              }}
+                              className={[
+                                "rounded-2xl px-4 py-3 text-sm transition",
+                                item.unavailable
+                                  ? "cursor-not-allowed bg-[#f3f1eb] text-[#c0c5bc]"
+                                  : "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]",
+                              ].join(" ")}
                             >
                               +
                             </button>
