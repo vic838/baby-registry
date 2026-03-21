@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import RegistryFaqSection from "../../components/RegistryFaqSection";
 
 type Lang = "nl" | "ca" | "en" | "es";
 type StatusFilter = "all" | "available" | "offered";
@@ -392,7 +393,6 @@ export default function RegistryPage() {
       const progress = target > 0 ? clamp01(total / target) : 0;
       const paidProgress = target > 0 ? clamp01(item.paid_cents / target) : 0;
       const categoryKey = normalizeCategory(item.category);
-      const shouldBlurImage = item.already_owned && !item.is_contribution_item;
       const overlayText = item.already_owned
         ? t.alreadyOffered
         : reached
@@ -411,7 +411,6 @@ export default function RegistryPage() {
         categoryKey,
         categoryLabel: categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other,
         displayPrice: item.target_cents ?? 0,
-        shouldBlurImage,
         overlayText,
       };
     });
@@ -432,6 +431,13 @@ export default function RegistryPage() {
     ];
     return preferred.filter((c) => categories.includes(c));
   }, [cards]);
+
+  useEffect(() => {
+    if (selectedCategory === "all") return;
+    if (!availableCategories.includes(selectedCategory)) {
+      setSelectedCategory("all");
+    }
+  }, [availableCategories, selectedCategory]);
 
   const visibleCards = useMemo(() => {
     let result = [...cards];
@@ -561,7 +567,10 @@ export default function RegistryPage() {
                 return (
                   <article
                     key={item.id}
-                    className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#d8ddd1]"
+                    className={[
+                      "flex min-h-[620px] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#d8ddd1] transition",
+                      item.unavailable ? "opacity-80" : "hover:-translate-y-0.5 hover:shadow-md",
+                    ].join(" ")}
                   >
                     <div className="relative aspect-[4/3] bg-[#f3f1eb]">
                       {item.image_url ? (
@@ -572,7 +581,7 @@ export default function RegistryPage() {
                             fill
                             className={[
                               "object-contain p-3 transition duration-300",
-                              item.shouldBlurImage ? "scale-[0.98] opacity-40 blur-[2px]" : "",
+                              item.unavailable ? "grayscale opacity-70" : "",
                             ].join(" ")}
                           />
                           {item.overlayText ? (
@@ -606,17 +615,19 @@ export default function RegistryPage() {
                       </div>
 
                       {item.description ? (
-                        <p className="mb-4 text-sm leading-6 text-[#7c8570]">
-                          {item.description}
-                        </p>
+                        <p className="mb-4 text-sm leading-6 text-[#7c8570]">{item.description}</p>
                       ) : null}
 
                       <div className="mt-auto">
                         {item.is_contribution_item ? (
                           <div className="mb-5">
                             <div className="mb-2 flex items-center justify-between text-sm text-[#7c8570]">
-                              <span>{euro(item.total, lang)}</span>
-                              <span>{euro(item.target, lang)}</span>
+                              <span>
+                                {t.total}: <span className="text-[#5e6a50]">{euro(item.total, lang)}</span>
+                              </span>
+                              <span>
+                                {t.target}: <span className="text-[#5e6a50]">{euro(item.target, lang)}</span>
+                              </span>
                             </div>
 
                             <div className="h-2.5 overflow-hidden rounded-full bg-[#e8ebe3]">
@@ -660,7 +671,7 @@ export default function RegistryPage() {
                             className={[
                               "flex-1 rounded-2xl px-4 py-3 text-sm transition",
                               item.unavailable
-                                ? "cursor-not-allowed bg-[#f3f1eb] text-[#8d9484]"
+                                ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
                                 : "bg-[#5e6a50] text-white hover:opacity-90",
                             ].join(" ")}
                           >
@@ -682,6 +693,7 @@ export default function RegistryPage() {
                                   ? "cursor-not-allowed bg-[#f3f1eb] text-[#c0c5bc]"
                                   : "bg-[#f3f1eb] text-[#5e6a50] hover:bg-[#ece8df]",
                               ].join(" ")}
+                              aria-label={ctaText}
                             >
                               +
                             </button>
@@ -695,6 +707,10 @@ export default function RegistryPage() {
             </div>
           </>
         )}
+
+        <div className="mt-10">
+          <RegistryFaqSection lang={lang} compact />
+        </div>
       </div>
     </main>
   );

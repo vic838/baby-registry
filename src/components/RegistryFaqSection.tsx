@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
 type Lang = "nl" | "ca" | "en" | "es";
+type FaqVariant = "default" | "checkout" | "payment";
 
 type FaqItem = {
   q: string;
@@ -178,6 +179,57 @@ const faqText: Record<
   },
 };
 
+const variantQuestions: Record<Lang, Record<Exclude<FaqVariant, "default">, string[]>> = {
+  nl: {
+    checkout: [
+      "Hoe kan ik betalen?",
+      "Is mijn betaling meteen bevestigd?",
+      "Hoe koop ik een cadeau?",
+    ],
+    payment: [
+      "Hoe kan ik betalen?",
+      "Is mijn betaling meteen bevestigd?",
+      "Kan ik ook een vrije bijdrage doen?",
+    ],
+  },
+  ca: {
+    checkout: [
+      "Com puc pagar?",
+      "El meu pagament queda confirmat immediatament?",
+      "Com compro un regal?",
+    ],
+    payment: [
+      "Com puc pagar?",
+      "El meu pagament queda confirmat immediatament?",
+      "Puc fer una contribució lliure?",
+    ],
+  },
+  en: {
+    checkout: [
+      "How can I pay?",
+      "Is my payment confirmed immediately?",
+      "How do I buy a gift?",
+    ],
+    payment: [
+      "How can I pay?",
+      "Is my payment confirmed immediately?",
+      "Can I make a free contribution?",
+    ],
+  },
+  es: {
+    checkout: [
+      "¿Cómo puedo pagar?",
+      "¿Mi pago queda confirmado de inmediato?",
+      "¿Cómo compro un regalo?",
+    ],
+    payment: [
+      "¿Cómo puedo pagar?",
+      "¿Mi pago queda confirmado de inmediato?",
+      "¿Puedo hacer una contribución libre?",
+    ],
+  },
+};
+
 function getSafeLang(value?: string): Lang {
   if (value === "nl" || value === "ca" || value === "en" || value === "es") {
     return value;
@@ -188,16 +240,24 @@ function getSafeLang(value?: string): Lang {
 export default function RegistryFaqSection({
   lang,
   compact = true,
+  variant = "default",
 }: {
   lang?: string;
   compact?: boolean;
+  variant?: FaqVariant;
 }) {
   const safeLang = getSafeLang(lang);
   const text = faqText[safeLang];
-  const items = useMemo(
-    () => (compact ? text.items.slice(0, 6) : text.items),
-    [compact, text.items]
-  );
+
+  const items = useMemo(() => {
+    if (variant === "checkout" || variant === "payment") {
+      const allowedQuestions = new Set(variantQuestions[safeLang][variant]);
+      return text.items.filter((item) => allowedQuestions.has(item.q));
+    }
+
+    return compact ? text.items.slice(0, 6) : text.items;
+  }, [compact, safeLang, text.items, variant]);
+
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
