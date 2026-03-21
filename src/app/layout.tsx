@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Tenor_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   description: "Baby registry website",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +31,7 @@ export default function RootLayout({
           <img
             src="/background/vogel.webp"
             alt=""
-            className="absolute left-[6%] top-[10%] w-[220px] rotate-6 blur-[0.3px] md:w-[140px]"
+            className="absolute left-[6%] top-[10%] w-[120px] rotate-6 blur-[0.3px] md:w-[140px]"
           />
           <img
             src="/background/varen.webp"
@@ -44,9 +50,7 @@ export default function RootLayout({
           />
         </div>
 
-        <div className="relative z-10">
-          {children}
-        </div>
+        <div className="relative z-10">{children}</div>
       </body>
     </html>
   );

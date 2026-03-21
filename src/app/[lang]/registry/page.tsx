@@ -30,6 +30,22 @@ type TotalsRow = {
   reported_cents: number;
 };
 
+const router = useRouter();
+
+useEffect(() => {
+  const handlePageShow = (event: PageTransitionEvent) => {
+    if (event.persisted) {
+      router.refresh();
+    }
+  };
+
+  window.addEventListener("pageshow", handlePageShow);
+
+  return () => {
+    window.removeEventListener("pageshow", handlePageShow);
+  };
+}, [router]);
+
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
     all: "Alle",
