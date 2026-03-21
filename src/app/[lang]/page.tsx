@@ -576,14 +576,16 @@ export default function RegistryPage() {
                       {item.image_url ? (
                         <>
                           <Image
-                            src={item.image_url}
-                            alt={item.title}
-                            fill
-                            className={[
-                              "object-contain p-3 transition duration-300",
-                              item.unavailable ? "grayscale opacity-70" : "",
-                            ].join(" ")}
-                          />
+  src={item.image_url}
+  alt={item.title}
+  fill
+  style={
+    item.unavailable
+      ? { filter: "grayscale(100%)", opacity: 0.6 }
+      : undefined
+  }
+  className="object-contain p-3 transition duration-300"
+/>
                           {item.overlayText ? (
                             <div className="absolute inset-0 flex items-center justify-center p-4">
                               <div className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-[#5e6a50] shadow">

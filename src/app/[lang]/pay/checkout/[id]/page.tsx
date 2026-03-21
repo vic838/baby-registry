@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Smartphone, Globe, CreditCard, Wallet } from "lucide-react";
 import QRCode from "qrcode";
+import RegistryFaqSection from "../../../../../components/RegistryFaqSection";
 
 type CheckoutStatus = "PENDING" | "REPORTED" | "PAID" | "CANCELLED" | "FAILED";
 type MethodKey = "payconiq" | "revolut" | "wero" | "bank";
@@ -1035,6 +1036,9 @@ export default function PayCheckoutPage() {
             {toast}
           </div>
         ) : null}
+
+        <div className="mt-10"> <RegistryFaqSection lang={lang} compact variant="checkout" />
+</div>
       </div>
     </main>
   );

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import RegistryFaqSection from "@/components/RegistryFaqSection";
+import RegistryFaqSection from "../../../components/RegistryFaqSection";
 
 type Lang = "nl" | "ca" | "en" | "es";
 type StatusFilter = "all" | "available" | "offered";
@@ -697,6 +697,7 @@ export default function RegistryPage() {
             <RegistryFaqSection lang={lang} compact />
           </>
         )}
+        <RegistryFaqSection lang={lang} compact />
       </div>
     </main>
   );

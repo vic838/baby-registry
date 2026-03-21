@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter, useParams } from "next/navigation";
+import RegistryFaqSection from "../../../components/RegistryFaqSection";
 
 type Lang = "nl" | "ca" | "en" | "es";
 
