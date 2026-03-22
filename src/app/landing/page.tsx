@@ -18,11 +18,11 @@ export default function LandingPage() {
           <>
             <div className="flex flex-1 items-center justify-center">
               <div className="w-full">
-                <div className="rounded-2xl bg-white p-4 shadow-lg">
+                <div className="mx-auto w-full max-w-sm rounded-2xl bg-white p-3 shadow-lg">
                   <img
                     src="/landing-baby.webp"
                     alt="Cleo"
-                    className="block w-full h-auto object-contain"
+                    className="block w-full h-auto max-h-[58vh] rounded-xl object-cover"
                   />
                 </div>
 
@@ -56,11 +56,11 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-1 flex-col justify-center">
-              <div className="mb-6 rounded-2xl bg-white p-4 shadow-lg">
+              <div className="mx-auto mb-6 w-full max-w-xs rounded-2xl bg-white p-3 shadow-lg">
                 <img
                   src="/landing-baby.webp"
                   alt="Cleo"
-                  className="block w-full h-auto object-contain"
+                  className="block w-full h-auto max-h-[36vh] rounded-xl object-cover"
                 />
               </div>
 

@@ -73,11 +73,11 @@ export default function ThankYouPage() {
   return (
     <main className="min-h-screen bg-[#f8f6f2]">
       <div className="mx-auto max-w-xl px-4 py-12 text-center sm:py-16">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="mx-auto mb-6 w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-sm">
           <img
             src="/thx.webp"
             alt="Thank you"
-            className="block w-full h-auto object-cover"
+            className="block w-full h-auto max-h-[34vh] object-cover"
           />
         </div>
 

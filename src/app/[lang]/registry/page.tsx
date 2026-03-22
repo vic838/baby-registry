@@ -137,6 +137,7 @@ const uiText: Record<
     backToWelcome: string;
     registryTitleShort: string;
     cartLabel: string;
+    noImage: string;
   }
 > = {
   nl: {
@@ -169,6 +170,7 @@ const uiText: Record<
     backToWelcome: "← Welkom",
     registryTitleShort: "Geboortelijst Cleo",
     cartLabel: "Mandje",
+    noImage: "Geen afbeelding",
   },
   ca: {
     title: "Llista de naixement",
@@ -200,6 +202,7 @@ const uiText: Record<
     backToWelcome: "← Benvinguda",
     registryTitleShort: "Llista Cleo",
     cartLabel: "Cistella",
+    noImage: "Sense imatge",
   },
   en: {
     title: "Baby Registry",
@@ -231,6 +234,7 @@ const uiText: Record<
     backToWelcome: "← Welcome",
     registryTitleShort: "Cleo Registry",
     cartLabel: "Cart",
+    noImage: "No image",
   },
   es: {
     title: "Lista de nacimiento",
@@ -262,6 +266,7 @@ const uiText: Record<
     backToWelcome: "← Bienvenida",
     registryTitleShort: "Lista Cleo",
     cartLabel: "Carrito",
+    noImage: "Sin imagen",
   },
 };
 
@@ -643,8 +648,8 @@ export default function RegistryPage() {
           >
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 inline-flex min-h-[1.2rem] min-w-[1.2rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-[10px] font-medium text-white">
-                {cartCount > 99 ? "99+" : cartCount}
+              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#6b7658] px-1 text-[10px] font-semibold leading-none text-white">
+                {cartCount > 99 ? "99+" : String(cartCount)}
               </span>
             ) : null}
           </button>
@@ -739,7 +744,6 @@ export default function RegistryPage() {
                   target,
                   totalProgress,
                   paidProgress,
-                  pct,
                   reached,
                   unavailable,
                   categoryLabel,
@@ -763,7 +767,7 @@ export default function RegistryPage() {
                     <div
                       key={it.id}
                       className={[
-                        "min-w-0 rounded-2xl border border-[#d8ddd1] bg-white p-4 shadow-sm transition",
+                        "flex min-h-[610px] flex-col rounded-2xl border border-[#d8ddd1] bg-white p-4 shadow-sm transition",
                         unavailable ? "opacity-80" : "hover:-translate-y-0.5 hover:shadow-md",
                       ].join(" ")}
                     >
@@ -792,7 +796,7 @@ export default function RegistryPage() {
                         </div>
                       ) : (
                         <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
-                          No image
+                          {t.noImage}
                         </div>
                       )}
 
@@ -806,13 +810,17 @@ export default function RegistryPage() {
                             </span>
                           </div>
 
-                          <div className="break-words text-base text-[#5e6a50]">{it.title}</div>
+                          <div className="min-h-[5.5rem] break-words text-base leading-10 text-[#5e6a50]">
+                            {it.title}
+                          </div>
 
-                          {it.description ? (
-                            <div className="mt-1 line-clamp-2 break-words text-sm text-[#7c8570]">
-                              {it.description}
-                            </div>
-                          ) : null}
+                          <div className="min-h-[3.8rem]">
+                            {it.description ? (
+                              <div className="mt-1 line-clamp-2 break-words text-sm leading-6 text-[#7c8570]">
+                                {it.description}
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
 
                         <span className={`shrink-0 rounded-full px-3 py-1 text-xs ${statusClass}`}>
@@ -820,68 +828,68 @@ export default function RegistryPage() {
                         </span>
                       </div>
 
-                      {it.is_contribution_item ? (
-                        <div className="mt-4 min-w-0">
-                          <div className="flex items-start justify-between gap-4 text-sm">
-                            <div className="min-w-0 text-[#7c8570]">
-                              <div>
-                                {t.total}:{" "}
-                                <span className="text-[#5e6a50]">{euro(total, lang)}</span>
+                      <div className="mt-4 flex flex-1 flex-col">
+                        {it.is_contribution_item ? (
+                          <div className="min-h-[6.25rem]">
+                            <div className="flex items-start justify-between gap-4 text-sm">
+                              <div className="min-w-0 text-[#7c8570]">
+                                <div>
+                                  {t.total}:{" "}
+                                  <span className="text-[#5e6a50]">{euro(total, lang)}</span>
+                                </div>
+                              </div>
+
+                              <div className="shrink-0 text-right text-[#7c8570]">
+                                <div>
+                                  {t.target}:{" "}
+                                  <span className="text-[#5e6a50]">
+                                    {target > 0 ? euro(target, lang) : "—"}
+                                  </span>
+                                </div>
                               </div>
                             </div>
 
-                            <div className="shrink-0 text-right text-[#7c8570]">
-                              <div>
-                                {t.target}:{" "}
-                                <span className="text-[#5e6a50]">
-                                  {target > 0 ? euro(target, lang) : "—"}
-                                </span>
-                              </div>
+                            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
+                              <div
+                                className="h-2 bg-[#cfd5c7]"
+                                style={{ width: `${Math.round(totalProgress * 100)}%` }}
+                              />
+                              <div
+                                className="-mt-2 h-2 bg-[#5e6a50]"
+                                style={{ width: `${Math.round(paidProgress * 100)}%` }}
+                              />
                             </div>
                           </div>
-
-                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e8ebe3]">
-                            <div
-                              className="h-2 bg-[#cfd5c7]"
-                              style={{ width: `${Math.round(totalProgress * 100)}%` }}
-                            />
-                            <div
-                              className="-mt-2 h-2 bg-[#5e6a50]"
-                              style={{ width: `${Math.round(paidProgress * 100)}%` }}
-                            />
+                        ) : it.target_cents ? (
+                          <div className="min-h-[6.25rem] text-sm text-[#7c8570]">
+                            <div className="pt-1">
+                              {t.price}:{" "}
+                              <span className="text-[#5e6a50]">{euro(it.target_cents, lang)}</span>
+                            </div>
                           </div>
+                        ) : (
+                          <div className="min-h-[6.25rem]" />
+                        )}
 
-                          <div className="mt-2 flex items-center justify-start gap-3 text-xs text-[#9ba292]">
-                            <span className="min-w-0 truncate">
-                              {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
-                            </span>
-                          </div>
+                        <div className="mt-auto pt-4">
+                          <button
+                            type="button"
+                            disabled={unavailable}
+                            onClick={() => {
+                              if (!unavailable) {
+                                router.push(`/${lang}/item/${it.slug}`);
+                              }
+                            }}
+                            className={[
+                              "w-full rounded-2xl px-4 py-3 text-sm transition",
+                              unavailable
+                                ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
+                                : "bg-[#5e6a50] text-white hover:opacity-90",
+                            ].join(" ")}
+                          >
+                            {unavailable ? statusText : ctaText}
+                          </button>
                         </div>
-                      ) : it.target_cents ? (
-                        <div className="mt-4 text-sm text-[#7c8570]">
-                          {t.price}:{" "}
-                          <span className="text-[#5e6a50]">{euro(it.target_cents, lang)}</span>
-                        </div>
-                      ) : null}
-
-                      <div className="mt-5">
-                        <button
-                          type="button"
-                          disabled={unavailable}
-                          onClick={() => {
-                            if (!unavailable) {
-                              router.push(`/${lang}/item/${it.slug}`);
-                            }
-                          }}
-                          className={[
-                            "w-full rounded-2xl px-4 py-3 text-sm transition",
-                            unavailable
-                              ? "cursor-not-allowed bg-[#ece8df] text-[#7c8570]"
-                              : "bg-[#5e6a50] text-white hover:opacity-90",
-                          ].join(" ")}
-                        >
-                          {unavailable ? statusText : ctaText}
-                        </button>
                       </div>
                     </div>
                   );
