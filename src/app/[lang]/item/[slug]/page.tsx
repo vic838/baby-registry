@@ -239,36 +239,80 @@ function normalizeCategory(category: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
+    dormir: "sleeping",
+
     feeding: "feeding",
     food: "feeding",
+    voeding: "feeding",
+    alimentació: "feeding",
+    alimentación: "feeding",
+
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
+    cura: "care",
+    cuidado: "care",
+
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
+    desplaçaments: "travel",
+    passeig: "travel",
+    paseo: "travel",
+
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
+    joguines: "toys",
+    juguetes: "toys",
+
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
+    textiel: "clothes",
+    roba: "clothes",
+    ropa: "clothes",
+
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
+    habitació: "room",
+    habitación: "room",
+
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
+    "must-haves": "essentials",
+    imprescindibles: "essentials",
+
     other: "other",
     overig: "other",
+    altres: "other",
+    otros: "other",
   };
 
   return aliases[value] ?? (value || "other");
+}
+
+function getCategoryBadgeClass(categoryKey: string) {
+  const map: Record<string, string> = {
+    essentials: "bg-amber-100 text-amber-800",
+    sleeping: "bg-sky-100 text-sky-800",
+    feeding: "bg-yellow-100 text-yellow-800",
+    care: "bg-emerald-100 text-emerald-800",
+    travel: "bg-indigo-100 text-indigo-800",
+    room: "bg-rose-100 text-rose-800",
+    clothes: "bg-pink-100 text-pink-800",
+    toys: "bg-violet-100 text-violet-800",
+    other: "bg-stone-100 text-stone-700",
+  };
+
+  return map[categoryKey] ?? map.other;
 }
 
 function readCart(): CartLine[] {
@@ -422,6 +466,7 @@ export default function ItemDetailPage() {
     const disabled = item.already_owned || reached;
     const categoryKey = normalizeCategory(item.category);
     const categoryLabel = categoryLabels[lang][categoryKey] ?? categoryLabels[lang].other;
+    const categoryBadgeClass = getCategoryBadgeClass(categoryKey);
 
     return {
       paid,
@@ -434,6 +479,7 @@ export default function ItemDetailPage() {
       reached,
       disabled,
       categoryLabel,
+      categoryBadgeClass,
     };
   }, [item, totals, lang]);
 
@@ -530,7 +576,9 @@ export default function ItemDetailPage() {
 
             <div>
               <div className="mb-4 flex flex-wrap items-center gap-3">
-                <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs ${view.categoryBadgeClass}`}
+                >
                   {view.categoryLabel}
                 </span>
 
@@ -554,12 +602,6 @@ export default function ItemDetailPage() {
                       <div className="text-sm text-[#7c8570]">{t.total}</div>
                       <div className="mt-1 text-xl text-[#5e6a50]">
                         {euro(view.total, lang)}
-                      </div>
-                      <div className="mt-1 text-xs text-[#9ba292]">
-                        {euro(view.paid, lang)} {t.confirmed}
-                        {view.reported > 0
-                          ? ` · ${euro(view.reported, lang)} ${t.reported}`
-                          : ""}
                       </div>
                     </div>
 

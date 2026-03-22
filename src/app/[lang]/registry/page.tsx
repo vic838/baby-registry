@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { ShoppingCart } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import RegistryFaqSection from "../../../components/RegistryFaqSection";
@@ -29,6 +30,29 @@ type TotalsRow = {
   paid_cents: number;
   reported_cents: number;
 };
+
+type CartLine =
+  | {
+      type: "item";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      quantity: number;
+      unit_cents: number;
+      addedAt: string;
+    }
+  | {
+      type: "contribution";
+      itemId: string;
+      slug: string;
+      title: string;
+      image_url: string | null;
+      amount_cents: number;
+      addedAt: string;
+    };
+
+const CART_STORAGE_KEY = "birthlist_cart_v1";
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
@@ -110,6 +134,9 @@ const uiText: Record<
     sortPriceDesc: string;
     offer: string;
     contribute: string;
+    backToWelcome: string;
+    registryTitleShort: string;
+    cartLabel: string;
   }
 > = {
   nl: {
@@ -139,6 +166,9 @@ const uiText: Record<
     sortPriceDesc: "Prijs hoog → laag",
     offer: "Aanbieden",
     contribute: "Bijdragen",
+    backToWelcome: "← Welkom",
+    registryTitleShort: "Geboortelijst Cleo",
+    cartLabel: "Mandje",
   },
   ca: {
     title: "Llista de naixement",
@@ -167,6 +197,9 @@ const uiText: Record<
     sortPriceDesc: "Preu alt → baix",
     offer: "Oferir",
     contribute: "Contribuir",
+    backToWelcome: "← Benvinguda",
+    registryTitleShort: "Llista Cleo",
+    cartLabel: "Cistella",
   },
   en: {
     title: "Baby Registry",
@@ -195,6 +228,9 @@ const uiText: Record<
     sortPriceDesc: "Price high → low",
     offer: "Offer",
     contribute: "Contribute",
+    backToWelcome: "← Welcome",
+    registryTitleShort: "Cleo Registry",
+    cartLabel: "Cart",
   },
   es: {
     title: "Lista de nacimiento",
@@ -223,6 +259,9 @@ const uiText: Record<
     sortPriceDesc: "Precio alto → bajo",
     offer: "Ofrecer",
     contribute: "Contribuir",
+    backToWelcome: "← Bienvenida",
+    registryTitleShort: "Lista Cleo",
+    cartLabel: "Carrito",
   },
 };
 
@@ -264,33 +303,59 @@ function normalizeCategory(category: string | null | undefined) {
   const aliases: Record<string, string> = {
     sleep: "sleeping",
     sleeping: "sleeping",
+    dormir: "sleeping",
+
     feeding: "feeding",
     food: "feeding",
+    voeding: "feeding",
+    alimentació: "feeding",
+    alimentación: "feeding",
+
     care: "care",
     hygiene: "care",
     care_hygiene: "care",
     oral_care_teething: "care",
     verzorging: "care",
+    cura: "care",
+    cuidado: "care",
+
     travel: "travel",
     onderweg: "travel",
     outdoor_travel: "travel",
+    passeig: "travel",
+    paseo: "travel",
+
     toys: "toys",
     speelgoed: "toys",
     play_development: "toys",
     play: "toys",
+    joguines: "toys",
+    juguetes: "toys",
+
     clothes: "clothes",
     clothing: "clothes",
     kleding: "clothes",
     textiles: "clothes",
+    textiel: "clothes",
+    roba: "clothes",
+    ropa: "clothes",
+
     room: "room",
     nursery: "room",
     furniture: "room",
     babykamer: "room",
+    habitació: "room",
+    habitación: "room",
+
     essentials: "essentials",
     musthaves: "essentials",
     must_haves: "essentials",
+    imprescindibles: "essentials",
+
     other: "other",
     overig: "other",
+    altres: "other",
+    otros: "other",
   };
 
   return aliases[value] ?? (value || "other");
@@ -299,6 +364,43 @@ function normalizeCategory(category: string | null | undefined) {
 function getCategoryLabel(lang: Lang, category: string | null | undefined) {
   const normalized = normalizeCategory(category);
   return categoryLabels[lang][normalized] ?? categoryLabels[lang].other;
+}
+
+function getCategoryBadgeClass(categoryKey: string) {
+  const map: Record<string, string> = {
+    essentials: "bg-amber-100 text-amber-800",
+    sleeping: "bg-sky-100 text-sky-800",
+    feeding: "bg-yellow-100 text-yellow-800",
+    care: "bg-emerald-100 text-emerald-800",
+    travel: "bg-indigo-100 text-indigo-800",
+    room: "bg-rose-100 text-rose-800",
+    clothes: "bg-pink-100 text-pink-800",
+    toys: "bg-violet-100 text-violet-800",
+    other: "bg-stone-100 text-stone-700",
+  };
+
+  return map[categoryKey] ?? map.other;
+}
+
+function readCart(): CartLine[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getCartCount(lines: CartLine[]) {
+  return lines.reduce((sum, line) => {
+    if (line.type === "item") {
+      return sum + Math.max(1, Number(line.quantity ?? 1));
+    }
+    return sum + 1;
+  }, 0);
 }
 
 export default function RegistryPage() {
@@ -317,6 +419,7 @@ export default function RegistryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("manual");
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -394,6 +497,28 @@ export default function RegistryPage() {
     };
   }, [lang]);
 
+  useEffect(() => {
+    const syncCartCount = () => {
+      setCartCount(getCartCount(readCart()));
+    };
+
+    syncCartCount();
+
+    const handleFocus = () => syncCartCount();
+    const handlePageShow = () => syncCartCount();
+    const handleStorage = () => syncCartCount();
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
   const cards = useMemo(() => {
     return items.map((it) => {
       const totalsRow = totals[it.id];
@@ -410,6 +535,7 @@ export default function RegistryPage() {
       const unavailable = it.already_owned || reached;
       const categoryKey = normalizeCategory(it.category);
       const categoryLabel = getCategoryLabel(lang, it.category);
+      const categoryBadgeClass = getCategoryBadgeClass(categoryKey);
       const displayPrice = it.target_cents ?? 0;
 
       return {
@@ -425,6 +551,7 @@ export default function RegistryPage() {
         unavailable,
         categoryKey,
         categoryLabel,
+        categoryBadgeClass,
         displayPrice,
       };
     });
@@ -493,6 +620,37 @@ export default function RegistryPage() {
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent">
+      <div className="sticky top-0 z-40 border-b border-[#d8ddd1] bg-[#f8f6f2]/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}`)}
+            className="shrink-0 text-sm text-[#5e6a50] transition hover:opacity-80"
+          >
+            {t.backToWelcome}
+          </button>
+
+          <div className="min-w-0 text-center text-sm font-medium text-[#5e6a50]">
+            <span className="block truncate">{t.registryTitleShort}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => router.push(`/${lang}/cart`)}
+            className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d8ddd1] bg-white text-[#5e6a50] shadow-sm transition hover:bg-[#f3f1eb]"
+            aria-label={t.cartLabel}
+            title={t.cartLabel}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 ? (
+              <span className="absolute -right-1 -top-1 inline-flex min-h-[1.2rem] min-w-[1.2rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-[10px] font-medium text-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            ) : null}
+          </button>
+        </div>
+      </div>
+
       <div className="mx-auto w-full max-w-6xl px-4 py-8">
         <h1 className="text-2xl text-[#5e6a50]">{t.title}</h1>
         <div className="mt-2 text-sm text-[#7c8570]">{t.subtitle}</div>
@@ -577,8 +735,6 @@ export default function RegistryPage() {
               {visibleCards.map(
                 ({
                   it,
-                  paid,
-                  reported,
                   total,
                   target,
                   totalProgress,
@@ -587,6 +743,7 @@ export default function RegistryPage() {
                   reached,
                   unavailable,
                   categoryLabel,
+                  categoryBadgeClass,
                 }) => {
                   const statusText = it.already_owned
                     ? t.alreadyOffered
@@ -612,27 +769,27 @@ export default function RegistryPage() {
                     >
                       {it.image_url ? (
                         <div
-  onClick={() => {
-    if (!unavailable) {
-      router.push(`/${lang}/item/${it.slug}`);
-    }
-  }}
-  className={[
-    "w-full overflow-hidden rounded-xl bg-[#f8f6f2] p-3",
-    !unavailable ? "cursor-pointer" : "cursor-not-allowed",
-  ].join(" ")}
->
-  <img
-    src={it.image_url}
-    alt={it.title}
-    className={[
-      "h-44 w-full max-w-full rounded-lg object-contain transition",
-      unavailable
-        ? "grayscale opacity-70"
-        : "hover:scale-[1.02] hover:opacity-90",
-    ].join(" ")}
-  />
-</div>
+                          onClick={() => {
+                            if (!unavailable) {
+                              router.push(`/${lang}/item/${it.slug}`);
+                            }
+                          }}
+                          className={[
+                            "w-full overflow-hidden rounded-xl bg-[#f8f6f2] p-3",
+                            !unavailable ? "cursor-pointer" : "cursor-not-allowed",
+                          ].join(" ")}
+                        >
+                          <img
+                            src={it.image_url}
+                            alt={it.title}
+                            className={[
+                              "h-44 w-full max-w-full rounded-lg object-contain transition",
+                              unavailable
+                                ? "grayscale opacity-70"
+                                : "hover:scale-[1.02] hover:opacity-90",
+                            ].join(" ")}
+                          />
+                        </div>
                       ) : (
                         <div className="flex h-44 w-full items-center justify-center rounded-xl bg-[#f3f1eb] text-sm text-[#8d9484]">
                           No image
@@ -642,7 +799,9 @@ export default function RegistryPage() {
                       <div className="mt-4 flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="mb-2">
-                            <span className="inline-flex rounded-full bg-[#ecefe7] px-3 py-1 text-xs text-[#5e6a50]">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs ${categoryBadgeClass}`}
+                            >
                               {categoryLabel}
                             </span>
                           </div>
@@ -669,13 +828,6 @@ export default function RegistryPage() {
                                 {t.total}:{" "}
                                 <span className="text-[#5e6a50]">{euro(total, lang)}</span>
                               </div>
-
-                              <div className="mt-1 text-xs text-[#9ba292]">
-                                {euro(paid, lang)} {t.confirmed}
-                                {reported > 0
-                                  ? ` · ${euro(reported, lang)} ${t.reported}`
-                                  : ""}
-                              </div>
                             </div>
 
                             <div className="shrink-0 text-right text-[#7c8570]">
@@ -699,11 +851,10 @@ export default function RegistryPage() {
                             />
                           </div>
 
-                          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#9ba292]">
+                          <div className="mt-2 flex items-center justify-start gap-3 text-xs text-[#9ba292]">
                             <span className="min-w-0 truncate">
                               {target > 0 ? `${pct}% ${t.ofGoal}` : t.noTarget}
                             </span>
-                            <span className="shrink-0">{t.darkConfirmed}</span>
                           </div>
                         </div>
                       ) : it.target_cents ? (
