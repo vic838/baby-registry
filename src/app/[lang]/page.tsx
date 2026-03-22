@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 type Lang = "nl" | "ca" | "en" | "es";
@@ -13,7 +14,7 @@ const text = {
     thanks:
       "Dank jullie wel om ons verhaal mee zo mooi te maken.",
     registry: "Bekijk de geboortelijst",
-    contribute: "Vrije bijdrage",
+    continue: "Continue",
   },
   ca: {
     intro:
@@ -23,7 +24,7 @@ const text = {
     thanks:
       "Moltes gràcies per formar part d’aquest moment tan especial.",
     registry: "Veure la llista",
-    contribute: "Contribució lliure",
+    continue: "Continue",
   },
   en: {
     intro:
@@ -33,7 +34,7 @@ const text = {
     thanks:
       "Thank you for being part of this special moment.",
     registry: "View registry",
-    contribute: "Free contribution",
+    continue: "Continue",
   },
   es: {
     intro:
@@ -43,13 +44,14 @@ const text = {
     thanks:
       "Gracias por formar parte de este momento tan especial.",
     registry: "Ver lista",
-    contribute: "Contribución libre",
+    continue: "Continue",
   },
 };
 
 export default function WelcomePage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
+  const [showText, setShowText] = useState(false);
 
   const lang: Lang = ["nl", "ca", "en", "es"].includes(params.lang)
     ? (params.lang as Lang)
@@ -58,37 +60,71 @@ export default function WelcomePage() {
   const t = text[lang];
 
   return (
-    <main className="min-h-screen bg-[#f8f6f2] px-4 py-6">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
+      <div className="relative mx-auto min-h-screen w-full max-w-md">
+        <div
+          className={[
+            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out",
+            showText ? "-translate-y-[52vh]" : "translate-y-0",
+          ].join(" ")}
+        >
+          <section className="relative h-screen overflow-hidden">
+            <img
+              src="/welcome-family.webp"
+              alt="Mar Vic Cleo"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
 
-        {/* FOTO */}
-        <div className="rounded-3xl overflow-hidden shadow-sm mb-6">
-          <img
-            src="/welcome-family.webp"
-            alt="Mar Vic Cleo"
-            className="w-full h-auto object-cover"
-          />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
+
+            <div className="relative flex min-h-screen flex-col justify-end px-4 pb-8 sm:px-6">
+              <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowText(true)}
+                    aria-label={t.continue}
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                  >
+                    ↓
+                  </button>
+
+                  <div className="text-xs tracking-wide text-white/95">
+                    {t.continue}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        {/* TEKST */}
-        <div className="text-center text-[#5e6a50]">
-          <p className="text-lg leading-relaxed">{t.intro}</p>
+        <div
+          className={[
+            "relative z-0 flex min-h-screen flex-col justify-end px-4 pb-8 pt-24 sm:px-6",
+            "transition-opacity duration-500",
+            showText ? "opacity-100" : "pointer-events-none opacity-0",
+          ].join(" ")}
+        >
+          <div className="rounded-3xl bg-white/80 p-5 shadow-sm backdrop-blur-sm">
+            <div className="text-center text-[#5e6a50]">
+              <p className="text-lg leading-relaxed">{t.intro}</p>
 
-          <p className="mt-4 text-sm leading-relaxed text-[#7c8570]">
-            {t.story}
-          </p>
+              <p className="mt-4 text-sm leading-relaxed text-[#7c8570]">
+                {t.story}
+              </p>
 
-          <p className="mt-3 text-sm text-[#7c8570]">{t.thanks}</p>
-        </div>
+              <p className="mt-3 text-sm text-[#7c8570]">{t.thanks}</p>
+            </div>
 
-        {/* CTA */}
-        <div className="mt-8 flex flex-col gap-3">
-          <button
-            onClick={() => router.push(`/${lang}/registry`)}
-            className="rounded-2xl bg-[#5e6a50] py-4 text-white text-sm"
-          >
-            {t.registry}
-          </button>
+            <div className="mt-8 flex flex-col gap-3">
+              <button
+                onClick={() => router.push(`/${lang}/registry`)}
+                className="rounded-2xl bg-[#5e6a50] py-4 text-sm text-white"
+              >
+                {t.registry}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </main>

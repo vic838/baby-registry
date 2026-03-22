@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import RegistryFaqSection from "../../../components/RegistryFaqSection";
 
@@ -14,6 +15,7 @@ const uiText: Record<
     checkoutLabel: string;
     backToList: string;
     home: string;
+    continue: string;
   }
 > = {
   nl: {
@@ -24,6 +26,7 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Terug naar geboortelijst",
     home: "Home",
+    continue: "Continue",
   },
   ca: {
     title: "Gràcies! 🎉",
@@ -33,6 +36,7 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Tornar a la llista de naixement",
     home: "Inici",
+    continue: "Continue",
   },
   en: {
     title: "Thank you! 🎉",
@@ -42,6 +46,7 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Back to registry",
     home: "Home",
+    continue: "Continue",
   },
   es: {
     title: "¡Gracias! 🎉",
@@ -51,6 +56,7 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Volver a la lista de nacimiento",
     home: "Inicio",
+    continue: "Continue",
   },
 };
 
@@ -65,54 +71,93 @@ export default function ThankYouPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const searchParams = useSearchParams();
+  const [showContent, setShowContent] = useState(false);
 
   const lang = getSafeLang(params?.lang);
   const t = uiText[lang];
   const id = searchParams.get("id");
 
   return (
-    <main className="min-h-screen bg-[#f8f6f2]">
-      <div className="mx-auto max-w-xl px-4 py-12 text-center sm:py-16">
-        <div className="mx-auto mb-6 w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-sm">
-          <img
-            src="/thx.webp"
-            alt="Thank you"
-            className="block w-full h-auto max-h-[34vh] object-cover"
-          />
+    <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
+      <div className="relative mx-auto min-h-screen w-full max-w-md">
+        <div
+          className={[
+            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out",
+            showContent ? "-translate-y-[52vh]" : "translate-y-0",
+          ].join(" ")}
+        >
+          <section className="relative h-screen overflow-hidden bg-[#f8f6f2]">
+            <img
+              src="/thx.webp"
+              alt="Thank you"
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f8f6f2]/10" />
+
+            <div className="relative flex min-h-screen flex-col justify-end px-4 pb-8 sm:px-6">
+              <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowContent(true)}
+                    aria-label={t.continue}
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                  >
+                    ↓
+                  </button>
+
+                  <div className="text-xs tracking-wide text-[#5e6a50]">
+                    {t.continue}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <h1 className="text-3xl font-semibold text-[#5e6a50]">{t.title}</h1>
+        <div
+          className={[
+            "relative z-0 flex min-h-screen flex-col justify-end px-4 pb-8 pt-24 sm:px-6",
+            "transition-opacity duration-500",
+            showContent ? "opacity-100" : "pointer-events-none opacity-0",
+          ].join(" ")}
+        >
+          <div className="rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
+            <h1 className="text-3xl font-semibold text-[#5e6a50]">{t.title}</h1>
 
-        <p className="mt-4 text-base text-[#7c8570]">{t.intro}</p>
+            <p className="mt-4 text-base text-[#7c8570]">{t.intro}</p>
 
-        <p className="mt-3 text-sm leading-7 text-[#7c8570]">{t.subtext}</p>
+            <p className="mt-3 text-sm leading-7 text-[#7c8570]">{t.subtext}</p>
 
-        {id ? (
-          <div className="mt-6 inline-flex rounded-full bg-white px-4 py-2 text-xs text-[#a0a69a] shadow-sm">
-            {t.checkoutLabel}: {id}
+            {id ? (
+              <div className="mt-6 inline-flex rounded-full bg-[#f8f6f2] px-4 py-2 text-xs text-[#a0a69a] shadow-sm">
+                {t.checkoutLabel}: {id}
+              </div>
+            ) : null}
+
+            <div className="mt-10 space-y-3">
+              <button
+                onClick={() => router.push(`/${lang}/registry`)}
+                className="min-h-[52px] w-full rounded-2xl bg-[#5e6a50] px-5 py-3 text-base font-medium text-white"
+                type="button"
+              >
+                {t.backToList}
+              </button>
+
+              <button
+                onClick={() => router.push(`/`)}
+                className="min-h-[52px] w-full rounded-2xl border border-[#d8ddd1] bg-white px-5 py-3 text-base font-medium text-[#5e6a50]"
+                type="button"
+              >
+                {t.home}
+              </button>
+            </div>
           </div>
-        ) : null}
 
-        <div className="mt-10 space-y-3">
-          <button
-            onClick={() => router.push(`/${lang}/registry`)}
-            className="min-h-[52px] w-full rounded-2xl bg-[#5e6a50] px-5 py-3 text-base font-medium text-white"
-            type="button"
-          >
-            {t.backToList}
-          </button>
-
-          <button
-            onClick={() => router.push(`/`)}
-            className="min-h-[52px] w-full rounded-2xl border border-[#d8ddd1] bg-white px-5 py-3 text-base font-medium text-[#5e6a50]"
-            type="button"
-          >
-            {t.home}
-          </button>
-        </div>
-
-        <div className="mt-10">
-          <RegistryFaqSection lang={lang} compact />
+          <div className="mt-10">
+            <RegistryFaqSection lang={lang} compact />
+          </div>
         </div>
       </div>
     </main>
