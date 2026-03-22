@@ -89,15 +89,6 @@ export default function WelcomePage() {
           >
             {t.registry}
           </button>
-
-          <button
-            onClick={() =>
-              router.push(`/${lang}/item/diaper_contribution`)
-            }
-            className="rounded-2xl border border-[#cfd5c7] bg-white py-4 text-sm text-[#5e6a50]"
-          >
-            {t.contribute}
-          </button>
         </div>
       </div>
     </main>

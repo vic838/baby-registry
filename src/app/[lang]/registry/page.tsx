@@ -53,6 +53,7 @@ type CartLine =
     };
 
 const CART_STORAGE_KEY = "birthlist_cart_v1";
+const DIAPER_PRIORITY_SLUG = "diaper_contribution";
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
@@ -62,8 +63,8 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Verzorging",
     travel: "Onderweg",
     toys: "Speelgoed",
-    clothes: "Kleding",
-    room: "Babykamer",
+    clothes: "Textiel",
+    room: "Meubels",
     essentials: "Must-haves",
     other: "Overig",
   },
@@ -71,11 +72,11 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     all: "Tots",
     sleeping: "Dormir",
     feeding: "Alimentació",
-    care: "Cura",
+    care: "Higiene i cura",
     travel: "Passeig",
     toys: "Joguines",
-    clothes: "Roba",
-    room: "Habitació",
+    clothes: "Tèxtil",
+    room: "Mobles",
     essentials: "Imprescindibles",
     other: "Altres",
   },
@@ -86,8 +87,8 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Care",
     travel: "Travel",
     toys: "Toys",
-    clothes: "Clothes",
-    room: "Nursery",
+    clothes: "Textiles",
+    room: "Furniture",
     essentials: "Essentials",
     other: "Other",
   },
@@ -98,8 +99,8 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Cuidado",
     travel: "Paseo",
     toys: "Juguetes",
-    clothes: "Ropa",
-    room: "Habitación",
+    clothes: "Textil",
+    room: "Muebles",
     essentials: "Imprescindibles",
     other: "Otros",
   },
@@ -342,12 +343,17 @@ function normalizeCategory(category: string | null | undefined) {
     kleding: "clothes",
     textiles: "clothes",
     textiel: "clothes",
+    tèxtil: "clothes",
+    textil: "clothes",
     roba: "clothes",
     ropa: "clothes",
 
     room: "room",
     nursery: "room",
     furniture: "room",
+    meubels: "room",
+    muebles: "room",
+    mobles: "room",
     babykamer: "room",
     habitació: "room",
     habitación: "room",
@@ -542,6 +548,7 @@ export default function RegistryPage() {
       const categoryLabel = getCategoryLabel(lang, it.category);
       const categoryBadgeClass = getCategoryBadgeClass(categoryKey);
       const displayPrice = it.target_cents ?? 0;
+      const isPriority = it.slug === DIAPER_PRIORITY_SLUG;
 
       return {
         it,
@@ -558,6 +565,7 @@ export default function RegistryPage() {
         categoryLabel,
         categoryBadgeClass,
         displayPrice,
+        isPriority,
       };
     });
   }, [items, totals, lang]);
@@ -586,13 +594,20 @@ export default function RegistryPage() {
     }
 
     if (sortOption === "price_asc") {
-      list.sort((a, b) => a.displayPrice - b.displayPrice);
+      list.sort((a, b) => {
+        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+        return a.displayPrice - b.displayPrice;
+      });
     } else if (sortOption === "price_desc") {
-      list.sort((a, b) => b.displayPrice - a.displayPrice);
+      list.sort((a, b) => {
+        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+        return b.displayPrice - a.displayPrice;
+      });
     } else {
-      list.sort(
-        (a, b) => Number(a.it.sort_order ?? 0) - Number(b.it.sort_order ?? 0)
-      );
+      list.sort((a, b) => {
+        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+        return Number(a.it.sort_order ?? 0) - Number(b.it.sort_order ?? 0);
+      });
     }
 
     return list;

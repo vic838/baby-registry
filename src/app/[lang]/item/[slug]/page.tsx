@@ -69,19 +69,19 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Verzorging",
     travel: "Onderweg",
     toys: "Speelgoed",
-    clothes: "Kleding",
-    room: "Babykamer",
+    clothes: "Textiel",
+    room: "Meubels",
     essentials: "Must-haves",
     other: "Overig",
   },
   ca: {
     sleeping: "Dormir",
     feeding: "Alimentació",
-    care: "Cura",
+    care: "Higiene i cura",
     travel: "Passeig",
     toys: "Joguines",
-    clothes: "Roba",
-    room: "Habitació",
+    clothes: "Tèxtil",
+    room: "Mobles",
     essentials: "Imprescindibles",
     other: "Altres",
   },
@@ -91,8 +91,8 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Care",
     travel: "Travel",
     toys: "Toys",
-    clothes: "Clothes",
-    room: "Nursery",
+    clothes: "Textiles",
+    room: "Furniture",
     essentials: "Essentials",
     other: "Other",
   },
@@ -102,8 +102,8 @@ const categoryLabels: Record<Lang, Record<string, string>> = {
     care: "Cuidado",
     travel: "Paseo",
     toys: "Juguetes",
-    clothes: "Ropa",
-    room: "Habitación",
+    clothes: "Textil",
+    room: "Muebles",
     essentials: "Imprescindibles",
     other: "Otros",
   },
@@ -274,12 +274,17 @@ function normalizeCategory(category: string | null | undefined) {
     kleding: "clothes",
     textiles: "clothes",
     textiel: "clothes",
+    tèxtil: "clothes",
+    textil: "clothes",
     roba: "clothes",
     ropa: "clothes",
 
     room: "room",
     nursery: "room",
     furniture: "room",
+    meubels: "room",
+    muebles: "room",
+    mobles: "room",
     babykamer: "room",
     habitació: "room",
     habitación: "room",
@@ -518,7 +523,7 @@ export default function ItemDetailPage() {
       <main className="min-h-screen bg-[#f8f6f2] px-4 py-8 text-[#5e6a50]">
         <button
           type="button"
-          onClick={() => router.push(`/${lang}`)}
+          onClick={() => router.push(`/${lang}/registry`)}
           className="mb-6 text-sm text-[#5e6a50]"
         >
           {t.back}
@@ -550,7 +555,7 @@ export default function ItemDetailPage() {
       <div className="mx-auto max-w-5xl px-4 py-8">
         <button
           type="button"
-          onClick={() => router.push(`/${lang}`)}
+          onClick={() => router.push(`/${lang}/registry`)}
           className="mb-6 text-sm text-[#5e6a50] transition hover:opacity-80"
         >
           {t.back}
