@@ -80,50 +80,46 @@ export default function ThankYouPage() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
       <div className="relative mx-auto min-h-screen w-full max-w-md">
+        {/* HERO */}
         <div
           className={[
-            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out",
-            showContent ? "-translate-y-[52vh]" : "translate-y-0",
+            "absolute inset-x-0 top-0 z-10 transition-transform duration-700 ease-in-out",
+            showContent ? "-translate-y-[72vh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section className="relative h-screen overflow-hidden bg-[#f8f6f2]">
+          <section className="relative h-[58vh] overflow-hidden bg-[#f8f6f2]">
             <img
               src="/thx.webp"
               alt="Thank you"
               className="absolute inset-0 h-full w-full object-contain"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f8f6f2]/10" />
+            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowContent(true)}
+                aria-label={t.continue}
+                className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+              >
+                ↓
+              </button>
 
-            <div className="relative flex min-h-screen flex-col justify-end px-4 pb-8 sm:px-6">
-              <div className="flex justify-center">
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowContent(true)}
-                    aria-label={t.continue}
-                    className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
-                  >
-                    ↓
-                  </button>
-
-                  <div className="text-xs tracking-wide text-[#5e6a50]">
-                    {t.continue}
-                  </div>
-                </div>
+              <div className="text-xs tracking-wide text-[#5e6a50]">
+                {t.continue}
               </div>
             </div>
           </section>
         </div>
 
+        {/* CONTENT */}
         <div
           className={[
-            "relative z-0 flex min-h-screen flex-col justify-end px-4 pb-8 pt-24 sm:px-6",
+            "relative z-0 min-h-screen px-4 pb-8 pt-[54vh] sm:px-6",
             "transition-opacity duration-500",
             showContent ? "opacity-100" : "pointer-events-none opacity-0",
           ].join(" ")}
         >
-          <div className="rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
+          <div className="rounded-3xl bg-white/90 p-5 text-center shadow-sm backdrop-blur-sm">
             <h1 className="text-3xl font-semibold text-[#5e6a50]">{t.title}</h1>
 
             <p className="mt-4 text-base text-[#7c8570]">{t.intro}</p>
@@ -131,7 +127,7 @@ export default function ThankYouPage() {
             <p className="mt-3 text-sm leading-7 text-[#7c8570]">{t.subtext}</p>
 
             {id ? (
-              <div className="mt-6 inline-flex rounded-full bg-[#f8f6f2] px-4 py-2 text-xs text-[#a0a69a] shadow-sm">
+              <div className="mt-6 inline-flex max-w-full rounded-full bg-[#f8f6f2] px-4 py-2 text-xs text-[#a0a69a] shadow-sm break-all">
                 {t.checkoutLabel}: {id}
               </div>
             ) : null}
