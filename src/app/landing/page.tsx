@@ -13,7 +13,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-neutral-50 overflow-hidden">
-      <div className="relative mx-auto min-h-screen w-full max-w-md">
+      <div className="relative mx-auto min-h-screen w-full max-w-6xl">
         {/* HERO IMAGE LAYER */}
         <div
           className={[
@@ -28,12 +28,12 @@ export default function LandingPage() {
               className="absolute inset-0 h-full w-full object-contain bg-neutral-50"
             />
 
-            <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-2">
+            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 md:bottom-10">
               <button
                 type="button"
                 onClick={() => setShowLanguageMenu(true)}
                 aria-label="Ga verder naar taalkeuze"
-                className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#cfd5c7] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                className="inline-flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full border border-[#cfd5c7] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
               >
                 ↓
               </button>

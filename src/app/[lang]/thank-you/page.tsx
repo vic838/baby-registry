@@ -79,27 +79,27 @@ export default function ThankYouPage() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
-      <div className="relative mx-auto min-h-screen w-full max-w-md">
+      <div className="relative mx-auto min-h-screen w-full max-w-6xl">
         {/* HERO */}
         <div
           className={[
             "absolute inset-x-0 top-0 z-10 transition-transform duration-700 ease-in-out",
-            showContent ? "-translate-y-[72vh]" : "translate-y-0",
+            showContent ? "-translate-y-[68vh] md:-translate-y-[72vh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section className="relative h-[58vh] overflow-hidden bg-[#f8f6f2]">
+          <section className="relative h-[72vh] md:h-[78vh] overflow-hidden bg-[#f8f6f2]">
             <img
               src="/thx.webp"
               alt="Thank you"
               className="absolute inset-0 h-full w-full object-contain"
             />
 
-            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-2">
+            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 md:bottom-10">
               <button
                 type="button"
                 onClick={() => setShowContent(true)}
                 aria-label={t.continue}
-                className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                className="inline-flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
               >
                 ↓
               </button>
@@ -114,20 +114,24 @@ export default function ThankYouPage() {
         {/* CONTENT */}
         <div
           className={[
-            "relative z-0 min-h-screen px-4 pb-8 pt-[54vh] sm:px-6",
+            "relative z-0 min-h-screen px-4 pb-8 pt-[66vh] sm:px-6 md:pt-[70vh]",
             "transition-opacity duration-500",
             showContent ? "opacity-100" : "pointer-events-none opacity-0",
           ].join(" ")}
         >
-          <div className="rounded-3xl bg-white/90 p-5 text-center shadow-sm backdrop-blur-sm">
-            <h1 className="text-3xl font-semibold text-[#5e6a50]">{t.title}</h1>
+          <div className="mx-auto max-w-2xl rounded-3xl bg-white/90 p-5 text-center shadow-sm backdrop-blur-sm md:p-8">
+            <h1 className="text-3xl font-semibold text-[#5e6a50] md:text-4xl">
+              {t.title}
+            </h1>
 
-            <p className="mt-4 text-base text-[#7c8570]">{t.intro}</p>
+            <p className="mt-4 text-base text-[#7c8570] md:text-lg">{t.intro}</p>
 
-            <p className="mt-3 text-sm leading-7 text-[#7c8570]">{t.subtext}</p>
+            <p className="mt-3 text-sm leading-7 text-[#7c8570] md:text-base">
+              {t.subtext}
+            </p>
 
             {id ? (
-              <div className="mt-6 inline-flex max-w-full rounded-full bg-[#f8f6f2] px-4 py-2 text-xs text-[#a0a69a] shadow-sm break-all">
+              <div className="mt-6 inline-flex max-w-full break-all rounded-full bg-[#f8f6f2] px-4 py-2 text-xs text-[#a0a69a] shadow-sm">
                 {t.checkoutLabel}: {id}
               </div>
             ) : null}
@@ -151,7 +155,7 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          <div className="mt-10">
+          <div className="mx-auto mt-10 max-w-2xl">
             <RegistryFaqSection lang={lang} compact />
           </div>
         </div>
