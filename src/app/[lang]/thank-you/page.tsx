@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import RegistryFaqSection from "../../../components/RegistryFaqSection";
 
@@ -15,7 +14,6 @@ const uiText: Record<
     checkoutLabel: string;
     backToList: string;
     home: string;
-    continue: string;
   }
 > = {
   nl: {
@@ -26,7 +24,6 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Terug naar geboortelijst",
     home: "Home",
-    continue: "Continue",
   },
   ca: {
     title: "Gràcies! 🎉",
@@ -36,7 +33,6 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Tornar a la llista de naixement",
     home: "Inici",
-    continue: "Continue",
   },
   en: {
     title: "Thank you! 🎉",
@@ -46,7 +42,6 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Back to registry",
     home: "Home",
-    continue: "Continue",
   },
   es: {
     title: "¡Gracias! 🎉",
@@ -56,7 +51,6 @@ const uiText: Record<
     checkoutLabel: "Checkout",
     backToList: "Volver a la lista de nacimiento",
     home: "Inicio",
-    continue: "Continue",
   },
 };
 
@@ -71,55 +65,26 @@ export default function ThankYouPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const searchParams = useSearchParams();
-  const [showContent, setShowContent] = useState(false);
 
   const lang = getSafeLang(params?.lang);
   const t = uiText[lang];
   const id = searchParams.get("id");
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
-      <div className="relative mx-auto min-h-screen w-full max-w-6xl">
-        {/* HERO */}
-        <div
-          className={[
-            "absolute inset-x-0 top-0 z-10 transition-transform duration-700 ease-in-out",
-            showContent ? "-translate-y-[68vh] md:-translate-y-[72vh]" : "translate-y-0",
-          ].join(" ")}
-        >
-          <section className="relative h-[72vh] md:h-[78vh] overflow-hidden bg-[#f8f6f2]">
+    <main className="min-h-screen bg-[#f8f6f2]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:px-8">
+        <section className="mx-auto flex max-w-5xl flex-col items-center">
+          <div className="relative w-full overflow-hidden rounded-[2rem] bg-[#f8f6f2]">
             <img
               src="/thx.webp"
               alt="Thank you"
-              className="absolute inset-0 h-full w-full object-contain"
+              className="mx-auto block h-auto max-h-[78vh] w-auto max-w-full object-contain"
             />
+          </div>
+        </section>
 
-            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 md:bottom-10">
-              <button
-                type="button"
-                onClick={() => setShowContent(true)}
-                aria-label={t.continue}
-                className="inline-flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full border border-[#d8ddd1] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
-              >
-                ↓
-              </button>
-
-              <div className="text-xs tracking-wide text-[#5e6a50]">
-                {t.continue}
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* CONTENT */}
-        <div
-          className={[
-            "relative z-0 min-h-screen px-4 pb-8 pt-[66vh] sm:px-6 md:pt-[70vh]",
-            "transition-opacity duration-500",
-            showContent ? "opacity-100" : "pointer-events-none opacity-0",
-          ].join(" ")}
-        >
-          <div className="mx-auto max-w-2xl rounded-3xl bg-white/90 p-5 text-center shadow-sm backdrop-blur-sm md:p-8">
+        <section className="mx-auto mt-6 max-w-2xl">
+          <div className="rounded-3xl bg-white/90 p-5 text-center shadow-sm backdrop-blur-sm md:p-8">
             <h1 className="text-3xl font-semibold text-[#5e6a50] md:text-4xl">
               {t.title}
             </h1>
@@ -155,10 +120,10 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          <div className="mx-auto mt-10 max-w-2xl">
+          <div className="mt-10">
             <RegistryFaqSection lang={lang} compact />
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );
