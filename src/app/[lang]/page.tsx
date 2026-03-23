@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
 type Lang = "nl" | "ca" | "en" | "es";
@@ -18,13 +19,13 @@ const text: Record<
     title: "Welkom bij de geboortelijst van Cleo",
     subtitle: "Kies een cadeautje voor Cleo.",
     registry: "Bekijk de geboortelijst",
-    continue: "Continue",
+    continue: "Verder",
   },
   ca: {
     title: "Benvinguts a la llista de naixement de la Cleo",
     subtitle: "Tria un regalet per a la Cleo.",
     registry: "Veure la llista",
-    continue: "Continue",
+    continue: "Continua",
   },
   en: {
     title: "Welcome to Cleo’s baby registry",
@@ -36,7 +37,7 @@ const text: Record<
     title: "Bienvenidos a la lista de nacimiento de Cleo",
     subtitle: "Elige un regalito para Cleo.",
     registry: "Ver la lista",
-    continue: "Continue",
+    continue: "Continuar",
   },
 };
 
@@ -52,37 +53,39 @@ export default function WelcomePage() {
   const t = text[lang];
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f8f6f2]">
-      <div className="relative mx-auto min-h-screen w-full max-w-md">
+    <main className="min-h-[100svh] overflow-hidden bg-[#f8f6f2]">
+      <div className="relative mx-auto min-h-[100svh] w-full max-w-md">
         <div
           className={[
-            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out",
-            showContent ? "-translate-y-[52vh]" : "translate-y-0",
+            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out will-change-transform",
+            showContent ? "-translate-y-[52svh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section className="relative h-screen overflow-hidden">
-            <img
+          <section className="relative h-[100svh] overflow-hidden">
+            <Image
               src="/welcome-family.webp"
-              alt="Mar Vic Cleo"
-             
-             className="
-  absolute inset-0 h-full w-full
-  object-cover
-  object-[60%_40%]
-  scale-[0.92] md:scale-100
-"
+              alt="Mar, Vic en Cleo"
+              fill
+              priority
+              sizes="100vw"
+              className="
+                absolute inset-0 h-full w-full
+                object-cover
+                object-[60%_40%]
+                scale-[0.92] md:scale-100
+              "
             />
 
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
 
-            <div className="relative flex min-h-screen flex-col justify-end px-4 pb-8 sm:px-6">
+            <div className="relative flex min-h-[100svh] flex-col justify-end px-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
               <div className="flex justify-center">
                 <div className="flex flex-col items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowContent(true)}
                     aria-label={t.continue}
-                    className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition duration-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-transparent active:scale-95"
                   >
                     ↓
                   </button>
@@ -98,7 +101,7 @@ export default function WelcomePage() {
 
         <div
           className={[
-            "relative z-0 flex min-h-screen flex-col justify-end px-4 pb-8 pt-24 sm:px-6",
+            "relative z-0 flex min-h-[100svh] flex-col justify-end px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-24 sm:px-6",
             "transition-opacity duration-500",
             showContent ? "opacity-100" : "pointer-events-none opacity-0",
           ].join(" ")}
@@ -108,13 +111,15 @@ export default function WelcomePage() {
               {t.title}
             </h1>
 
-            <p className="mt-3 text-sm leading-7 text-[#7c8570]">{t.subtitle}</p>
+            <p className="mt-3 text-sm leading-7 text-[#7c8570]">
+              {t.subtitle}
+            </p>
 
             <div className="mt-8">
               <button
-                onClick={() => router.push(`/${lang}/registry`)}
-                className="min-h-[52px] w-full rounded-2xl bg-[#5e6a50] px-5 py-3 text-base font-medium text-white"
                 type="button"
+                onClick={() => router.push(`/${lang}/registry`)}
+                className="min-h-[52px] w-full rounded-2xl bg-[#5e6a50] px-5 py-3 text-base font-medium text-white transition duration-200 hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#5e6a50]/30 active:scale-[0.99]"
               >
                 {t.registry}
               </button>
