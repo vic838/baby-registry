@@ -64,7 +64,13 @@ export default function WelcomePage() {
             <img
               src="/welcome-family.webp"
               alt="Mar Vic Cleo"
-             className="absolute inset-0 h-full w-full object-cover object-[center_35%] scale-[0.94]"
+             
+             className="
+  absolute inset-0 h-full w-full
+  object-cover
+  object-[60%_40%]
+  scale-[0.92] md:scale-100
+"
             />
 
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
