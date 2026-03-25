@@ -825,7 +825,7 @@ export default function RegistryPage() {
                             </span>
                           </div>
 
-                          <div className="min-h-[5.5rem] break-words text-base leading-10 text-[#5e6a50]">
+                          <div className="min-h-[3rem] break-words text-base leading-tight text-[#5e6a50]">
                             {it.title}
                           </div>
 
