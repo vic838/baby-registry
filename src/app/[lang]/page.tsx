@@ -41,7 +41,7 @@ export default function WelcomePage() {
 
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#f8f6f2]">
-      <div className="relative mx-auto min-h-[100svh] w-full max-w-md">
+      <div className="relative min-h-[100svh] w-full">
         <div
           className={[
             "absolute inset-0 z-10 transition-transform duration-700 ease-in-out will-change-transform",
@@ -61,8 +61,7 @@ export default function WelcomePage() {
               className="
                 absolute inset-0 h-full w-full
                 object-cover
-                object-[60%_40%]
-                scale-[0.92] md:scale-100
+                object-center
               "
             />
 
@@ -77,7 +76,7 @@ export default function WelcomePage() {
             showContent ? "opacity-100" : "pointer-events-none opacity-0",
           ].join(" ")}
         >
-          <div className="rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
+          <div className="mx-auto w-full max-w-md rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
             <h1 className="text-2xl font-semibold leading-tight text-[#5e6a50]">
               {copy.title}
             </h1>
