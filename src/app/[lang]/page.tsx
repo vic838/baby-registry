@@ -47,28 +47,28 @@ export default function WelcomePage() {
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#f8f6f2]">
       <div className="relative min-h-[100svh] w-full">
+        {/* HERO IMAGE LAYER */}
         <div
           className={[
             "absolute inset-0 z-10 transition-transform duration-700 ease-in-out will-change-transform",
             showContent ? "-translate-y-[52svh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section className="relative h-[100svh] overflow-hidden">
+          <section className="relative flex h-[100svh] w-full items-center justify-center overflow-hidden bg-[#f8f6f2] px-4 py-4 sm:px-6 md:px-8">
+            {/* IMAGE */}
             <Image
               src="/welcome-family.webp"
               alt="Mar, Vic en Cleo"
-              fill
+              width={1200}
+              height={800}
               priority
-              sizes="100vw"
-              className="
-                absolute inset-0 h-full w-full
-                object-cover
-                object-center
-              "
+              className="max-h-[100svh] w-auto object-contain"
             />
 
+            {/* OVERLAY */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
 
+            {/* CTA PIJL */}
             {!showContent && (
               <div className="absolute bottom-[12vh] left-4 sm:left-6 flex flex-col items-start gap-2">
                 <button
@@ -88,6 +88,7 @@ export default function WelcomePage() {
           </section>
         </div>
 
+        {/* CONTENT LAYER */}
         <div
           className={[
             "relative z-0 flex min-h-[100svh] flex-col justify-end px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-24 sm:px-6",
