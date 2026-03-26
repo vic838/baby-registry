@@ -22,17 +22,15 @@ export default function LandingPage() {
           ].join(" ")}
         >
           <section
-            className="relative min-h-screen w-full cursor-pointer overflow-hidden bg-neutral-50"
+            className="flex min-h-screen w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-50 px-4 py-4 sm:px-6 md:px-8"
             onClick={() => setShowLanguageMenu(true)}
             aria-label="Ga verder naar taalkeuze"
           >
             <img
               src="/landing-baby.webp"
               alt="Cleo"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="max-h-[100svh] max-w-full w-auto object-contain"
             />
-
-            <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10" />
           </section>
         </div>
 
