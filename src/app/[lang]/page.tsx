@@ -3,39 +3,30 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
+import { welcomeCopy } from "@/content/welcomeCopy";
 
 type Lang = "nl" | "ca" | "en" | "es";
 
-const text: Record<
+const uiText: Record<
   Lang,
   {
-    title: string;
-    subtitle: string;
     registry: string;
     continue: string;
   }
 > = {
   nl: {
-    title: "Welkom bij de geboortelijst van Cleo",
-    subtitle: "Kies een cadeautje voor Cleo.",
     registry: "Bekijk de geboortelijst",
     continue: "Verder",
   },
   ca: {
-    title: "Benvinguts a la llista de naixement de la Cleo",
-    subtitle: "Tria un regalet per a la Cleo.",
     registry: "Veure la llista",
     continue: "Continua",
   },
   en: {
-    title: "Welcome to Cleo’s baby registry",
-    subtitle: "Choose a gift for Cleo.",
     registry: "View registry",
     continue: "Continue",
   },
   es: {
-    title: "Bienvenidos a la lista de nacimiento de Cleo",
-    subtitle: "Elige un regalito para Cleo.",
     registry: "Ver la lista",
     continue: "Continuar",
   },
@@ -50,7 +41,8 @@ export default function WelcomePage() {
     ? (params.lang as Lang)
     : "nl";
 
-  const t = text[lang];
+  const t = uiText[lang];
+  const copy = welcomeCopy[lang] ?? welcomeCopy.en;
 
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#f8f6f2]">
@@ -108,11 +100,17 @@ export default function WelcomePage() {
         >
           <div className="rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
             <h1 className="text-2xl font-semibold leading-tight text-[#5e6a50]">
-              {t.title}
+              {copy.title}
             </h1>
 
-            <p className="mt-3 text-sm leading-7 text-[#7c8570]">
-              {t.subtitle}
+            <div className="mt-4 space-y-4 text-sm leading-7 text-[#7c8570]">
+              {copy.body.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+
+            <p className="mt-4 text-sm font-medium text-[#7c8570]">
+              {copy.signature}
             </p>
 
             <div className="mt-8">

@@ -12,7 +12,7 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50 overflow-hidden">
+    <main className="min-h-screen overflow-hidden bg-neutral-50">
       <div className="relative mx-auto min-h-screen w-full max-w-6xl">
         {/* HERO IMAGE LAYER */}
         <div
@@ -21,26 +21,26 @@ export default function LandingPage() {
             showLanguageMenu ? "-translate-y-[58vh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section className="relative h-screen overflow-hidden">
-            <img
-              src="/landing-baby.webp"
-              alt="Cleo"
-              className="absolute inset-0 h-full w-full object-contain bg-neutral-50"
-            />
+          <section className="flex min-h-screen flex-col items-center bg-neutral-50 px-4 pt-4 pb-8 sm:px-6 md:pt-6 md:pb-10">
+            <div className="relative flex min-h-0 w-full flex-1 items-center justify-center">
+              <img
+                src="/landing-baby.webp"
+                alt="Cleo"
+                className="max-h-full w-full object-contain"
+              />
+            </div>
 
-            <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 md:bottom-10">
+            <div className="mt-4 flex flex-col items-center gap-3 md:mt-6">
               <button
                 type="button"
                 onClick={() => setShowLanguageMenu(true)}
                 aria-label="Ga verder naar taalkeuze"
-                className="inline-flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full border border-[#cfd5c7] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95"
+                className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-[#cfd5c7] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95 md:h-16 md:w-16"
               >
                 ↓
               </button>
 
-              <div className="text-xs tracking-wide text-[#5e6a50]">
-                Continue
-              </div>
+              <div className="text-xs tracking-wide text-[#5e6a50]">Continue</div>
             </div>
           </section>
         </div>
@@ -50,7 +50,7 @@ export default function LandingPage() {
           className={[
             "relative z-0 flex min-h-screen flex-col justify-end px-4 pb-8 pt-24 sm:px-6",
             "transition-opacity duration-500",
-            showLanguageMenu ? "opacity-100" : "opacity-0 pointer-events-none",
+            showLanguageMenu ? "opacity-100" : "pointer-events-none opacity-0",
           ].join(" ")}
         >
           <div className="mb-4">

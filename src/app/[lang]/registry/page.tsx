@@ -53,7 +53,13 @@ type CartLine =
     };
 
 const CART_STORAGE_KEY = "birthlist_cart_v1";
-const DIAPER_PRIORITY_SLUG = "diaper_contribution";
+
+const PRIORITY_SLUGS = [
+  "diaper_contribution",
+  "stokkesys_1",
+  "stokkesys_3",
+  "stokkesys_2",
+];
 
 const categoryLabels: Record<Lang, Record<string, string>> = {
   nl: {
@@ -543,12 +549,14 @@ export default function RegistryPage() {
       const paidProgress = target > 0 ? clamp01(paid / target) : 0;
       const pct = Math.round(totalProgress * 100);
       const reached = it.is_contribution_item && target > 0 && total >= target;
-      const unavailable = it.already_owned || reached;
+      const isOffered = it.is_contribution_item
+        ? reached
+        : it.already_owned || paid > 0;
+      const unavailable = isOffered;
       const categoryKey = normalizeCategory(it.category);
       const categoryLabel = getCategoryLabel(lang, it.category);
       const categoryBadgeClass = getCategoryBadgeClass(categoryKey);
       const displayPrice = it.target_cents ?? 0;
-      const isPriority = it.slug === DIAPER_PRIORITY_SLUG;
 
       return {
         it,
@@ -560,12 +568,12 @@ export default function RegistryPage() {
         paidProgress,
         pct,
         reached,
+        isOffered,
         unavailable,
         categoryKey,
         categoryLabel,
         categoryBadgeClass,
         displayPrice,
-        isPriority,
       };
     });
   }, [items, totals, lang]);
@@ -593,22 +601,32 @@ export default function RegistryPage() {
       list = list.filter((card) => card.unavailable);
     }
 
-    if (sortOption === "price_asc") {
-      list.sort((a, b) => {
-        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+    list.sort((a, b) => {
+      if (selectedCategory === "all") {
+        const indexA = PRIORITY_SLUGS.indexOf(a.it.slug);
+        const indexB = PRIORITY_SLUGS.indexOf(b.it.slug);
+
+        const isPriorityA = indexA !== -1;
+        const isPriorityB = indexB !== -1;
+
+        if (isPriorityA && isPriorityB) {
+          return indexA - indexB;
+        }
+
+        if (isPriorityA) return -1;
+        if (isPriorityB) return 1;
+      }
+
+      if (sortOption === "price_asc") {
         return a.displayPrice - b.displayPrice;
-      });
-    } else if (sortOption === "price_desc") {
-      list.sort((a, b) => {
-        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+      }
+
+      if (sortOption === "price_desc") {
         return b.displayPrice - a.displayPrice;
-      });
-    } else {
-      list.sort((a, b) => {
-        if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
-        return Number(a.it.sort_order ?? 0) - Number(b.it.sort_order ?? 0);
-      });
-    }
+      }
+
+      return Number(a.it.sort_order ?? 0) - Number(b.it.sort_order ?? 0);
+    });
 
     return list;
   }, [cards, selectedCategory, statusFilter, sortOption]);
@@ -760,20 +778,25 @@ export default function RegistryPage() {
                   totalProgress,
                   paidProgress,
                   reached,
+                  isOffered,
                   unavailable,
                   categoryLabel,
                   categoryBadgeClass,
                 }) => {
-                  const statusText = it.already_owned
+                  const statusText = it.is_contribution_item
+                    ? reached
+                      ? t.full
+                      : t.available
+                    : isOffered
                     ? t.alreadyOffered
-                    : reached
-                    ? t.full
                     : t.available;
 
-                  const statusClass = it.already_owned
+                  const statusClass = it.is_contribution_item
+                    ? reached
+                      ? "bg-[#dfe7d7] text-[#4f5a44]"
+                      : "bg-[#f4efe3] text-[#8a7753]"
+                    : isOffered
                     ? "bg-[#ecefe7] text-[#5e6a50]"
-                    : reached
-                    ? "bg-[#dfe7d7] text-[#4f5a44]"
                     : "bg-[#f4efe3] text-[#8a7753]";
 
                   const ctaText = it.is_contribution_item ? t.contribute : t.offer;
@@ -881,7 +904,9 @@ export default function RegistryPage() {
                           <div className="min-h-[6.25rem] text-sm text-[#7c8570]">
                             <div className="pt-1">
                               {t.price}:{" "}
-                              <span className="text-[#5e6a50]">{euro(it.target_cents, lang)}</span>
+                              <span className="text-[#5e6a50]">
+                                {euro(it.target_cents, lang)}
+                              </span>
                             </div>
                           </div>
                         ) : (
