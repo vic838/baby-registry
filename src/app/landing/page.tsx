@@ -30,7 +30,7 @@ export default function LandingPage() {
             />
 
             {/* CTA PIJL (overlay) */}
-            <div className="absolute bottom-6 left-6 flex flex-col items-center gap-2">
+            <div className="absolute bottom-16 left-4 sm:left-6 flex flex-col items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowLanguageMenu(true)}
