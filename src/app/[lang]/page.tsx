@@ -11,19 +11,24 @@ const uiText: Record<
   Lang,
   {
     registry: string;
+    continue: string;
   }
 > = {
   nl: {
     registry: "Bekijk de geboortelijst",
+    continue: "Verder",
   },
   ca: {
     registry: "Veure la llista",
+    continue: "Continua",
   },
   en: {
     registry: "View registry",
+    continue: "Continue",
   },
   es: {
     registry: "Ver la lista",
+    continue: "Continuar",
   },
 };
 
@@ -48,10 +53,7 @@ export default function WelcomePage() {
             showContent ? "-translate-y-[52svh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section
-            className="relative h-[100svh] overflow-hidden cursor-pointer"
-            onClick={() => setShowContent(true)}
-          >
+          <section className="relative h-[100svh] overflow-hidden">
             <Image
               src="/welcome-family.webp"
               alt="Mar, Vic en Cleo"
@@ -66,6 +68,23 @@ export default function WelcomePage() {
             />
 
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
+
+            {!showContent && (
+              <div className="absolute bottom-[12vh] left-4 sm:left-6 flex flex-col items-start gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowContent(true)}
+                  aria-label={t.continue}
+                  className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition duration-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-transparent active:scale-95 md:h-16 md:w-16"
+                >
+                  ↓
+                </button>
+
+                <div className="text-xs tracking-wide text-white/95">
+                  {t.continue}
+                </div>
+              </div>
+            )}
           </section>
         </div>
 
