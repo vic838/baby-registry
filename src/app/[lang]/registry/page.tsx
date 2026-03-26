@@ -815,32 +815,34 @@ export default function RegistryPage() {
                         </div>
                       )}
 
-                      <div className="mt-4 flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="mb-2">
-                            <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs ${categoryBadgeClass}`}
-                            >
-                              {categoryLabel}
-                            </span>
-                          </div>
-
-                          <div className="min-h-[3rem] break-words text-base leading-tight text-[#5e6a50]">
-                            {it.title}
-                          </div>
-
-                          <div className="min-h-[3.8rem]">
-                            {it.description ? (
-                              <div className="mt-1 line-clamp-2 break-words text-sm leading-6 text-[#7c8570]">
-                                {it.description}
-                              </div>
-                            ) : null}
-                          </div>
+                      <div className="mt-4">
+                        <div className="mb-2">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs ${categoryBadgeClass}`}
+                          >
+                            {categoryLabel}
+                          </span>
                         </div>
 
-                        <span className={`shrink-0 rounded-full px-3 py-1 text-xs ${statusClass}`}>
-                          {statusText}
-                        </span>
+                        <div className="min-h-[3rem] text-base leading-tight text-[#5e6a50]">
+                          {it.title}
+                        </div>
+
+                        <div className="mt-2">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs ${statusClass}`}
+                          >
+                            {statusText}
+                          </span>
+                        </div>
+
+                        <div className="min-h-[3.8rem]">
+                          {it.description ? (
+                            <div className="mt-3 line-clamp-2 text-sm leading-6 text-[#7c8570]">
+                              {it.description}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
 
                       <div className="mt-4 flex flex-1 flex-col">
