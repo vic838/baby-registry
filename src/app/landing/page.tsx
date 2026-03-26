@@ -21,16 +21,29 @@ export default function LandingPage() {
             showLanguageMenu ? "-translate-y-[58vh]" : "translate-y-0",
           ].join(" ")}
         >
-          <section
-            className="flex min-h-screen w-full cursor-pointer items-center justify-center overflow-hidden bg-neutral-50 px-4 py-4 sm:px-6 md:px-8"
-            onClick={() => setShowLanguageMenu(true)}
-            aria-label="Ga verder naar taalkeuze"
-          >
+          <section className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-neutral-50 px-4 py-4 sm:px-6 md:px-8">
+            {/* IMAGE */}
             <img
               src="/landing-baby.webp"
               alt="Cleo"
               className="max-h-[100svh] max-w-full w-auto object-contain"
             />
+
+            {/* CTA PIJL (overlay) */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLanguageMenu(true)}
+                aria-label="Ga verder naar taalkeuze"
+                className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-[#cfd5c7] bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition hover:bg-white active:scale-95 md:h-16 md:w-16"
+              >
+                ↓
+              </button>
+
+              <div className="text-xs tracking-wide text-[#5e6a50]">
+                Continue
+              </div>
+            </div>
           </section>
         </div>
 
