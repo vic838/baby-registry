@@ -49,7 +49,7 @@ export default function WelcomePage() {
         <div
           className={[
             "absolute inset-0 z-10 transition-transform duration-700 ease-in-out will-change-transform",
-            showContent ? "-translate-y-[52svh]" : "translate-y-0",
+            showContent ? "-translate-y-[68svh]" : "translate-y-0",
           ].join(" ")}
         >
           <section className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#f8f6f2] px-4 py-4 sm:px-6 md:px-8">
