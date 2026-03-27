@@ -681,13 +681,18 @@ export default function RegistryPage() {
 >
   <ShoppingCart className="h-5 w-5" />
 
-  {cartCount > 0 ? (
-    <span className="absolute -right-1.5 -top-1.5 grid h-6 min-w-[1.4rem] place-items-center rounded-full bg-[#5e6a50] px-1 text-xs font-bold text-white shadow-sm">
-      <span className="leading-none translate-y-[0.5px]">
-        {cartCount > 99 ? "99+" : String(cartCount)}
-      </span>
+  {cartCount > 0 && (
+    <span
+      className="absolute -right-1.5 -top-1.5 flex h-6 min-w-[1.4rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-xs font-bold shadow-sm"
+      style={{
+        color: "#fff",
+        lineHeight: "1",
+        zIndex: 50,
+      }}
+    >
+      {cartCount > 99 ? "99+" : cartCount}
     </span>
-  ) : null}
+  )}
 </button>
         </div>
       </div>
