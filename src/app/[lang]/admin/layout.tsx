@@ -56,7 +56,9 @@ export default function AdminLayout({
           return;
         }
       } finally {
-        if (active) setChecking(false);
+        if (active) {
+          setChecking(false);
+        }
       }
     }
 

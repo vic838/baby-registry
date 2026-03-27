@@ -61,29 +61,27 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push(`/${lang}/admin/dashboard`);
-      router.refresh();
+      window.location.href = `/${lang}/admin/dashboard`;
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Onverwachte fout");
       setLoading(false);
       return;
     }
-
-    setLoading(false);
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white">
+    <main className="min-h-screen flex items-center justify-center bg-white px-4">
       <form
         onSubmit={login}
-        className="w-full max-w-sm rounded-2xl border p-6 shadow-sm"
+        className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
       >
-        <h1 className="text-xl font-semibold">Admin login</h1>
+        <h1 className="text-xl font-semibold text-neutral-900">Admin login</h1>
 
         <div className="mt-4">
-          <label className="text-sm">Email</label>
+          <label className="text-sm text-neutral-700">Email</label>
           <input
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -92,9 +90,9 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="mt-3">
-          <label className="text-sm">Password</label>
+          <label className="text-sm text-neutral-700">Password</label>
           <input
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -102,10 +100,14 @@ export default function AdminLoginPage() {
           />
         </div>
 
-        {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
+        {error ? (
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
 
         <button
-          className="mt-5 w-full rounded-xl bg-gray-900 px-4 py-3 text-white disabled:opacity-60"
+          className="mt-5 w-full rounded-xl bg-neutral-900 px-4 py-3 text-white disabled:opacity-60"
           disabled={loading}
           type="submit"
         >

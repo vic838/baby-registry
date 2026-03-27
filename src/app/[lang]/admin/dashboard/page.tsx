@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 type Checkout = {
   id: string;
@@ -13,6 +15,10 @@ type Checkout = {
 };
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const params = useParams<{ lang: string }>();
+  const lang = params.lang ?? "nl";
+
   const [rows, setRows] = useState<Checkout[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -68,6 +74,11 @@ export default function AdminDashboardPage() {
     }
   }
 
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push(`/${lang}/admin/login`);
+  }
+
   useEffect(() => {
     loadRows();
   }, []);
@@ -75,13 +86,23 @@ export default function AdminDashboardPage() {
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-6">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
-            Reported payments
-          </h1>
-          <p className="mt-1 text-sm text-neutral-600">
-            Confirm manually received payments and mark them as paid.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-neutral-900">
+              Reported payments
+            </h1>
+            <p className="mt-1 text-sm text-neutral-600">
+              Confirm manually received payments and mark them as paid.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100"
+          >
+            Logout
+          </button>
         </div>
 
         {error ? (
@@ -131,10 +152,14 @@ export default function AdminDashboardPage() {
                   <button
                     type="button"
                     onClick={() => markPaid(row.id)}
-                    disabled={busyId === row.id}
+                    disabled={busyId === row.id || row.status === "PAID"}
                     className="inline-flex items-center justify-center rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {busyId === row.id ? "Updating..." : "Mark as paid"}
+                    {busyId === row.id
+                      ? "Updating..."
+                      : row.status === "PAID"
+                      ? "Paid"
+                      : "Mark as paid"}
                   </button>
                 </div>
               </div>
