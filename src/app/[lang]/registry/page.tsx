@@ -682,10 +682,10 @@ export default function RegistryPage() {
   <ShoppingCart className="h-5 w-5" />
   {cartCount > 0 ? (
     <span
-      className="absolute -right-2 -top-2 flex h-7 min-w-[1.75rem] items-center justify-center rounded-full bg-[#5e6a50] px-1.5 shadow-sm"
-      style={{ zIndex: 20 }}
-    >
-      <span
+  className="absolute -right-1.5 -top-1.5 flex h-6 min-w-[1.4rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-xs font-bold text-white shadow-sm"
+>
+  {cartCount > 99 ? "99+" : String(cartCount)}
+<span
         className="block text-sm font-bold text-white"
         style={{
           color: "#fff",
