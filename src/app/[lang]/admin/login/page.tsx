@@ -19,27 +19,57 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (signInError) {
+        setError(signInError.message);
+        setLoading(false);
+        return;
+      }
+
+      const user = signInData.user;
+
+      if (!user) {
+        await supabase.auth.signOut();
+        setError("Geen geldige gebruiker gevonden na login.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminRow, error: adminError } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (adminError) {
+        await supabase.auth.signOut();
+        setError(`Admin-check mislukt: ${adminError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      if (!adminRow) {
+        await supabase.auth.signOut();
+        setError("Deze gebruiker heeft geen admin-toegang.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/${lang}/admin/dashboard`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Onverwachte fout");
       setLoading(false);
       return;
     }
 
-    const { data: isAdmin, error: adminError } = await supabase.rpc("is_admin");
-
-    if (adminError || !isAdmin) {
-      await supabase.auth.signOut();
-      setError("Deze gebruiker heeft geen admin-toegang.");
-      setLoading(false);
-      return;
-    }
-
-    router.push(`/${lang}/admin`);
+    setLoading(false);
   }
 
   return (
