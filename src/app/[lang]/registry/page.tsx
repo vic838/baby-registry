@@ -681,7 +681,7 @@ export default function RegistryPage() {
           >
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#6b7658] px-1 text-[10px] font-semibold leading-none text-white">
+              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-[10px] font-semibold leading-none text-white">
                 {cartCount > 99 ? "99+" : String(cartCount)}
               </span>
             ) : null}
