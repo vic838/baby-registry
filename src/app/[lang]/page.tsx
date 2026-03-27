@@ -44,47 +44,48 @@ export default function WelcomePage() {
   const copy = welcomeCopy[lang] ?? welcomeCopy.en;
 
   return (
-    <main className="min-h-[100svh] overflow-hidden bg-[#f8f6f2]">
-      <div className="relative min-h-[100svh] w-full">
-        <div
+    <main className="min-h-[100svh] bg-[#f8f6f2]">
+      <div className="w-full">
+        <section
           className={[
-            "absolute inset-0 z-10 transition-transform duration-700 ease-in-out will-change-transform",
-            showContent ? "-translate-y-[68svh]" : "translate-y-0",
+            "relative flex w-full items-center justify-center overflow-hidden bg-[#f8f6f2] px-4 py-4 sm:px-6 md:px-8",
+            "transition-all duration-700 ease-in-out",
+            showContent ? "h-[38svh] min-h-[280px]" : "h-[100svh]",
           ].join(" ")}
         >
-          <section className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#f8f6f2] px-4 py-4 sm:px-6 md:px-8">
-            <img
-              src="/welcome-family.webp"
-              alt="Mar, Vic en Cleo"
-              className="max-h-[100svh] max-w-full w-auto object-contain"
-            />
+          <img
+            src="/welcome-family.webp"
+            alt="Mar, Vic en Cleo"
+            className="max-h-full max-w-full w-auto object-contain"
+          />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
 
-            {!showContent && (
-              <div className="absolute bottom-[12vh] left-4 sm:left-6 flex flex-col items-start gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowContent(true)}
-                  aria-label={t.continue}
-                  className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition duration-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-transparent active:scale-95 md:h-16 md:w-16"
-                >
-                  ↓
-                </button>
+          {!showContent && (
+            <div className="absolute bottom-[12vh] left-4 sm:left-6 flex flex-col items-start gap-2">
+              <button
+                type="button"
+                onClick={() => setShowContent(true)}
+                aria-label={t.continue}
+                className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/70 bg-white/95 text-3xl text-[#5e6a50] shadow-lg backdrop-blur transition duration-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-transparent active:scale-95 md:h-16 md:w-16"
+              >
+                ↓
+              </button>
 
-                <div className="text-xs tracking-wide text-white/95">
-                  {t.continue}
-                </div>
+              <div className="text-xs tracking-wide text-white/95">
+                {t.continue}
               </div>
-            )}
-          </section>
-        </div>
+            </div>
+          )}
+        </section>
 
         <div
           className={[
-            "relative z-0 flex min-h-[100svh] flex-col justify-end px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-24 sm:px-6",
-            "transition-opacity duration-500",
-            showContent ? "opacity-100" : "pointer-events-none opacity-0",
+            "px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 sm:px-6",
+            "transition-all duration-500",
+            showContent
+              ? "pointer-events-auto opacity-100"
+              : "pointer-events-none max-h-0 overflow-hidden opacity-0",
           ].join(" ")}
         >
           <div className="mx-auto w-full max-w-md rounded-3xl bg-white/85 p-5 text-center shadow-sm backdrop-blur-sm">
