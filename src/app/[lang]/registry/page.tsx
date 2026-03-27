@@ -673,19 +673,19 @@ export default function RegistryPage() {
           </div>
 
           <button
-            type="button"
-            onClick={() => router.push(`/${lang}/cart`)}
-            className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d8ddd1] bg-white text-[#5e6a50] shadow-sm transition hover:bg-[#f3f1eb]"
-            aria-label={t.cartLabel}
-            title={t.cartLabel}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-[10px] font-semibold leading-none text-white">
-                {cartCount > 99 ? "99+" : String(cartCount)}
-              </span>
-            ) : null}
-          </button>
+  type="button"
+  onClick={() => router.push(`/${lang}/cart`)}
+  className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d8ddd1] bg-white text-[#5e6a50] shadow-sm transition hover:bg-[#f3f1eb]"
+  aria-label={t.cartLabel}
+  title={t.cartLabel}
+>
+  <ShoppingCart className="h-5 w-5" />
+  {cartCount > 0 ? (
+    <span className="absolute -right-1.5 -top-1.5 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-[#5e6a50] px-1 text-[11px] font-bold leading-[1] text-white shadow-sm">
+      {cartCount > 99 ? "99+" : String(cartCount)}
+    </span>
+  ) : null}
+</button>
         </div>
       </div>
 
