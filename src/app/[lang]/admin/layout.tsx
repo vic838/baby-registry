@@ -34,9 +34,15 @@ export default function AdminLayout({
           return;
         }
 
-        const { data: isAdmin, error } = await supabase.rpc("is_admin");
+        const user = session.user;
 
-        if (error || !isAdmin) {
+        const { data: adminRow, error: adminError } = await supabase
+          .from("admin_users")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (adminError || !adminRow) {
           await supabase.auth.signOut();
 
           if (!isLoginPage) {
@@ -46,7 +52,7 @@ export default function AdminLayout({
         }
 
         if (isLoginPage) {
-          router.replace(`/${lang}/admin`);
+          router.replace(`/${lang}/admin/dashboard`);
           return;
         }
       } finally {
