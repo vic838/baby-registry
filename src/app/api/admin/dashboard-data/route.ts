@@ -1,5 +1,5 @@
+import { requireAdminFromBearerToken } from "@/lib/adminApiAuth";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 type CheckoutSessionRow = {
   id: string;
@@ -45,12 +45,20 @@ type ItemRow = {
   slug: string;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const auth = await requireAdminFromBearerToken(
+      req.headers.get("authorization")
     );
+
+    if (!auth.ok) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
+    const { supabase } = auth;
 
     const [
       checkoutSessionsResult,
@@ -142,7 +150,9 @@ export async function GET() {
           item_id: line.item_id,
           title:
             line.title_snapshot ||
-            (line.item_id ? itemSlugById.get(line.item_id) ?? "Unknown item" : "Unknown item"),
+            (line.item_id
+              ? itemSlugById.get(line.item_id) ?? "Unknown item"
+              : "Unknown item"),
           quantity: line.quantity ?? 1,
           amount_cents: line.amount_cents,
           line_type: line.line_type,
@@ -177,7 +187,9 @@ export async function GET() {
     });
 
     const combined = [...checkoutRows, ...contributionRows].sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
 
     const checkoutPaidCents = checkoutRows
@@ -199,10 +211,16 @@ export async function GET() {
     const stats = {
       total_received_cents: checkoutPaidCents + contributionPaidCents,
       total_open_cents: checkoutOpenCents + contributionOpenCents,
-      checkout_paid_count: checkoutRows.filter((row) => row.status === "PAID").length,
-      checkout_open_count: checkoutRows.filter((row) => row.status !== "PAID").length,
-      contribution_paid_count: contributionRows.filter((row) => row.status === "PAID").length,
-      contribution_open_count: contributionRows.filter((row) => row.status !== "PAID").length,
+      checkout_paid_count: checkoutRows.filter((row) => row.status === "PAID")
+        .length,
+      checkout_open_count: checkoutRows.filter((row) => row.status !== "PAID")
+        .length,
+      contribution_paid_count: contributionRows.filter(
+        (row) => row.status === "PAID"
+      ).length,
+      contribution_open_count: contributionRows.filter(
+        (row) => row.status !== "PAID"
+      ).length,
       total_paid_count:
         checkoutRows.filter((row) => row.status === "PAID").length +
         contributionRows.filter((row) => row.status === "PAID").length,

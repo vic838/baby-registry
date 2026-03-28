@@ -1,5 +1,5 @@
+import { requireAdminFromBearerToken } from "@/lib/adminApiAuth";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 type Payload = {
   kind?: "checkout" | "contribution";
@@ -9,6 +9,19 @@ type Payload = {
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAdminFromBearerToken(
+      req.headers.get("authorization")
+    );
+
+    if (!auth.ok) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      );
+    }
+
+    const { supabase } = auth;
+
     const body = (await req.json()) as Payload;
     const kind = body.kind;
     const id = body.id;
@@ -20,11 +33,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     if (kind === "checkout") {
       const { data, error } = await supabase
