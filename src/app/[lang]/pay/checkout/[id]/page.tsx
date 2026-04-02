@@ -7,7 +7,7 @@ import QRCode from "qrcode";
 import RegistryFaqSection from "../../../../../components/RegistryFaqSection";
 
 type CheckoutStatus = "PENDING" | "REPORTED" | "PAID" | "CANCELLED" | "FAILED";
-type MethodKey = "payconiq" | "revolut" | "wero" | "bank";
+type MethodKey = "payconiq" | "revolut" | "wero" | "bizum" | "bank";
 type Lang = "nl" | "ca" | "en" | "es";
 type ViewMode = "mobile" | "desktop";
 
@@ -75,6 +75,7 @@ const uiText: Record<
     payconiqHint: string;
     revolutHint: string;
     weroHint: string;
+    bizumHint: string;
     scanHint: string;
     bankTransfer: string;
     openInBankApp: string;
@@ -129,6 +130,8 @@ const uiText: Record<
       "Open Revolut en stuur het totaalbedrag. Gebruik de referentie in het bericht of de omschrijving indien mogelijk.",
     weroHint:
       "Stuur het totaalbedrag via Wero en gebruik de referentie in het bericht of de omschrijving.",
+    bizumHint:
+      "Stuur het totaalbedrag via Bizum en gebruik de referentie in het bericht of de omschrijving indien mogelijk.",
     scanHint:
       "Scan met je bankapp om IBAN, bedrag en referentie automatisch over te nemen.",
     bankTransfer: "Bankoverschrijving",
@@ -183,6 +186,8 @@ const uiText: Record<
       "Obre Revolut i envia l'import total. Afegeix la referència al missatge o descripció si és possible.",
     weroHint:
       "Envia l'import total amb Wero i afegeix la referència al missatge o descripció.",
+    bizumHint:
+      "Envia l'import total amb Bizum i afegeix la referència al missatge o descripció si és possible.",
     scanHint:
       "Escaneja amb l'app bancària per omplir automàticament IBAN, import i referència.",
     bankTransfer: "Transferència bancària",
@@ -237,6 +242,8 @@ const uiText: Record<
       "Open Revolut and send the total amount. Add the reference in the message or description if possible.",
     weroHint:
       "Send the total amount through Wero and include the reference in the message or description.",
+    bizumHint:
+      "Send the total amount through Bizum and include the reference in the message or description if possible.",
     scanHint:
       "Scan with your banking app to automatically import IBAN, amount and reference.",
     bankTransfer: "Bank transfer",
@@ -291,6 +298,8 @@ const uiText: Record<
       "Abre Revolut y envía el importe total. Añade la referencia en el mensaje o descripción si es posible.",
     weroHint:
       "Envía el importe total por Wero e incluye la referencia en el mensaje o descripción.",
+    bizumHint:
+      "Envía el importe total por Bizum e incluye la referencia en el mensaje o descripción si es posible.",
     scanHint:
       "Escanea con tu app bancaria para importar automáticamente IBAN, importe y referencia.",
     bankTransfer: "Transferencia bancaria",
@@ -394,6 +403,7 @@ export default function PayCheckoutPage() {
   const payconiqUrl = process.env.NEXT_PUBLIC_PAYCONIQ_MONEYPOT_URL ?? "";
   const revolutUrl = process.env.NEXT_PUBLIC_REVOLUT_ME_URL ?? "";
   const weroPhone = process.env.NEXT_PUBLIC_WERO_PHONE ?? "";
+  const bizumPhone = process.env.NEXT_PUBLIC_BIZUM_PHONE ?? "";
   const iban = process.env.NEXT_PUBLIC_BANK_IBAN ?? "";
   const bic = process.env.NEXT_PUBLIC_BANK_BIC ?? "";
   const accountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "";
@@ -651,13 +661,19 @@ export default function PayCheckoutPage() {
           icon: <Wallet className="h-4 w-4" />,
         },
         {
+          key: "bizum" as const,
+          label: "Bizum",
+          enabled: !!bizumPhone,
+          icon: <Smartphone className="h-4 w-4" />,
+        },
+        {
           key: "bank" as const,
           label: t.bankTransfer,
           enabled: !!iban,
           icon: <CreditCard className="h-4 w-4" />,
         },
       ].filter((m) => m.enabled),
-    [payconiqUrl, revolutUrl, weroPhone, iban, t.bankTransfer]
+    [payconiqUrl, revolutUrl, weroPhone, bizumPhone, iban, t.bankTransfer]
   );
 
   const [activeMethod, setActiveMethod] = useState<MethodKey>("bank");
@@ -877,6 +893,11 @@ export default function PayCheckoutPage() {
                       onClick={() => copy(t.weroNumber, weroPhone)}
                       label={t.copy}
                     />
+                  ) : activeMethod === "bizum" ? (
+                    <ActionButton
+                      onClick={() => copy(t.bizumNumber, bizumPhone)}
+                      label={t.copy}
+                    />
                   ) : (
                     <ActionButton
                       onClick={() => copy(t.iban, iban)}
@@ -893,6 +914,8 @@ export default function PayCheckoutPage() {
                   ? t.revolutHint
                   : activeMethod === "wero"
                   ? t.weroHint
+                  : activeMethod === "bizum"
+                  ? t.bizumHint
                   : t.bankHint}
               </div>
 
@@ -903,6 +926,25 @@ export default function PayCheckoutPage() {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <code className="font-semibold break-all">{weroPhone}</code>
                       <CopyBtn label={t.weroNumber} value={weroPhone} />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-600">{t.reference}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <code className="font-semibold break-all">{checkout.reference}</code>
+                      <CopyBtn label={t.reference} value={checkout.reference} />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {activeMethod === "bizum" ? (
+                <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-600">{t.bizumNumber}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <code className="font-semibold break-all">{bizumPhone}</code>
+                      <CopyBtn label={t.bizumNumber} value={bizumPhone} />
                     </div>
                   </div>
                   <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1037,8 +1079,9 @@ export default function PayCheckoutPage() {
           </div>
         ) : null}
 
-        <div className="mt-10"> <RegistryFaqSection lang={lang} compact variant="checkout" />
-</div>
+        <div className="mt-10">
+          <RegistryFaqSection lang={lang} compact variant="checkout" />
+        </div>
       </div>
     </main>
   );
