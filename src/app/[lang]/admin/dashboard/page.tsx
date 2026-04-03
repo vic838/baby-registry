@@ -30,6 +30,7 @@ type CheckoutRow = {
   id: string;
   name: string;
   email: string;
+  message: string | null;
   amount_cents: number;
   reference: string;
   status: string;
@@ -43,6 +44,7 @@ type ContributionRow = {
   id: string;
   name: string;
   email: string;
+  message: string | null;
   amount_cents: number;
   reference: string;
   status: string;
@@ -380,6 +382,16 @@ export default function AdminDashboardPage() {
                         {row.kind === "checkout"
                           ? "checkout"
                           : row.payment_provider || "unknown"}
+                      </div>
+
+                      <div className="pt-2">
+                        <div className="text-sm font-medium text-neutral-800">
+                          Bericht
+                        </div>
+
+                        <div className="mt-2 max-w-2xl rounded-xl bg-neutral-50 px-3 py-2 text-sm leading-6 text-neutral-700 whitespace-pre-wrap break-words">
+                          {row.message?.trim() ? row.message : "—"}
+                        </div>
                       </div>
 
                       {row.kind === "checkout" ? (

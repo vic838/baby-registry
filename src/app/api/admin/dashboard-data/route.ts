@@ -5,6 +5,7 @@ type CheckoutSessionRow = {
   id: string;
   name: string;
   email: string;
+  message: string | null;
   total_cents: number;
   reference: string;
   status: string;
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
     ] = await Promise.all([
       supabase
         .from("checkout_sessions")
-        .select("id, name, email, total_cents, reference, status, created_at")
+        .select("id, name, email, message, total_cents, reference, status, created_at")
         .order("created_at", { ascending: false }),
 
       supabase
@@ -140,6 +141,7 @@ export async function GET(req: Request) {
         id: session.id,
         name: session.name,
         email: session.email,
+        message: session.message,
         amount_cents: session.total_cents,
         reference: session.reference,
         status: session.status,
@@ -171,6 +173,7 @@ export async function GET(req: Request) {
         id: contribution.id,
         name: contribution.name,
         email: contribution.email,
+        message: contribution.message,
         amount_cents: contribution.amount_cents,
         reference: contribution.reference,
         status: contribution.status,
